@@ -99,20 +99,15 @@ export default function Home() {
   const [historyAnswer,setHistoryAnswer] = useState("");
   const [profileOpen,setProfileOpen] = useState(false);
   const [weight,setWeight] = useState("");
-  const [avatarMood,setAvatarMood] = useState(0);
   const [activeStat,setActiveStat] = useState(null);
+  const [selectedMemory,setSelectedMemory] = useState(null);
+  const [memoryFolder,setMemoryFolder] = useState("all");
   const [centralNow,setCentralNow] = useState(new Date());
   const supabase = useMemo(()=>supabaseClient(),[]);
 
-  const avatarMessages = [
-    "you got this, bestie ♡",
-    "drink some water, babe 🫧",
-    "progress counts even when it's messy",
-    "girl... log the sleep 😂",
-    "you are doing better than you think"
-  ];
-
   useEffect(()=>{
+    const openMemory = event => setSelectedMemory(event.detail);
+    window.addEventListener("open-bubble-memory", openMemory);
     const timer = setInterval(()=>setCentralNow(new Date()), 1000);
     const existing = JSON.parse(localStorage.getItem(STORE) || "[]");
     if (!localStorage.getItem(SEEDED)) {
@@ -123,7 +118,10 @@ export default function Home() {
       localStorage.setItem(SEEDED,"1");
       setEntries(seeded);
     } else setEntries(existing);
-    return ()=>clearInterval(timer);
+    return ()=>{
+      clearInterval(timer);
+      window.removeEventListener("open-bubble-memory", openMemory);
+    };
   },[]);
 
   const game = useMemo(()=>calculateGame(entries),[entries]);
@@ -211,49 +209,36 @@ export default function Home() {
           <h1>Bubble <span>🫧</span></h1>
           <p>Live your life. Bubble organizes it.</p>
         </div>
-        <button className="profile-button" onClick={()=>setProfileOpen(!profileOpen)}>
-          <div className="avatar-ring"><img src="/bubble-avatar.svg" alt="Alli's Bubble avatar"/></div>
-          <span><b>Level {game.level}</b><small>Brave Bubble</small></span>
+        <button className="level-chip" onClick={()=>setTab("home")}>
+          <span>🫧</span>
+          <div><b>Level {game.level}</b><small>{game.level<3?"Brave Bubble":game.level<6?"Strong Bubble":"Unstoppable Bubble"}</small></div>
         </button>
       </header>
 
-      {profileOpen && <section className="profile-pop card">
-        <div className="mini-profile-avatar" onClick={()=>setAvatarMood((avatarMood+1)%avatarMessages.length)}>
-          <img src="/bubble-avatar.svg" alt="Alli avatar"/>
-          <span>{avatarMessages[avatarMood]}</span>
-        </div>
-        <div className="profile-details">
-          <b>{PROFILE.name}, {PROFILE.age}</b><small>{PROFILE.height} · {PROFILE.weightNote}</small>
-          <div className="weight-row"><input value={weight} onChange={e=>setWeight(e.target.value)} placeholder="New weight"/><button onClick={addWeight}>Update</button></div>
-          <small>Tap the avatar. She talks now. 😂</small>
-        </div>
-      </section>}
-
       <nav className="nav">
-        {["home","bubbles","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}
+        {["home","bubbles","memories","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}
       </nav>
 
       {tab==="home" && <>
-        <section className="home-overview card">
-          <div className="home-avatar interactive-avatar" onClick={()=>setAvatarMood((avatarMood+1)%avatarMessages.length)}>
-            <div className="avatar-halo"></div>
-            <img src="/bubble-avatar.svg" alt="Bubble avatar"/>
-            <div className="speech">{avatarMessages[avatarMood]}</div>
-            <div className="avatar-actions"><span>✨</span><span>🫧</span><span>💗</span></div>
-          </div>
-          <div className="level-panel">
+        <section className="home-overview card clean-overview">
+          <div className="overview-level">
             <p className="soft">YOUR CURRENT OVERVIEW</p>
             <h2>Level {game.level}</h2>
             <h3>{game.level<3?"Brave Bubble":game.level<6?"Strong Bubble":"Unstoppable Bubble"}</h3>
-            <div className="clock-card">
-              <span>📍 Arkansas · Central Time</span>
-              <b>{centralTime}</b>
-              <small>{centralDate}</small>
-            </div>
             <div className="xp-label"><span>XP</span><b>{game.levelXP} / 100</b></div>
             <div className="bar"><i style={{width:`${game.levelXP}%`}}/></div>
             <small>{game.nextLevelXP} XP to next level</small>
           </div>
+          <div className="clock-card">
+            <span>📍 Arkansas · Central Time</span>
+            <b>{centralTime}</b>
+            <small>{centralDate}</small>
+          </div>
+          <button className="memory-count-card" onClick={()=>setTab("memories")}>
+            <span>🫧</span>
+            <div><b>{game.totals.checkins}</b><small>Total memories</small></div>
+            <em>Open library →</em>
+          </button>
         </section>
 
         <section className="home-columns">
@@ -273,6 +258,14 @@ export default function Home() {
               <Stat name="Creativity" icon="🎨" value={game.stats.creativity} desc="art + play + expression" onClick={()=>setActiveStat("creativity")}/>
               <Stat name="Finance" icon="🪙" value={game.stats.finance} desc="money awareness + planning" onClick={()=>setActiveStat("finance")}/>
             </div>
+            <ZeroStatQuestions
+              stats={game.stats}
+              onAnswer={(question)=>{
+                setText(question + " ");
+                setTab("home");
+                setTimeout(()=>window.scrollTo({top:document.body.scrollHeight/4,behavior:"smooth"}),50);
+              }}
+            />
           </aside>
 
           <div className="checkin-column">
@@ -317,7 +310,7 @@ export default function Home() {
 
             <section className="lifetime card">
               <h3>Lifetime adventure totals</h3>
-              <div><span><b>{fmt(game.totals.miles,2)}</b><small>miles</small></span><span><b>{fmt(game.totals.squats)}</b><small>squats</small></span><span><b>{fmt(game.totals.workoutMinutes)}</b><small>workout min</small></span><span><b>{fmt(game.totals.checkins)}</b><small>memories</small></span></div>
+              <div><span><b>{fmt(game.totals.miles,2)}</b><small>miles</small></span><span><b>{fmt(game.totals.squats)}</b><small>squats</small></span><span><b>{fmt(game.totals.workoutMinutes)}</b><small>workout min</small></span><button className="lifetime-memory-button" onClick={()=>setTab("memories")}><b>{fmt(game.totals.checkins)}</b><small>memories</small><em>Open →</em></button></div>
             </section>
           </div>
         </section>
@@ -342,6 +335,15 @@ export default function Home() {
         back={()=>setTab("bubbles")}
       />}
 
+      {tab==="memories" && <MemoryLibrary
+        entries={entries}
+        folder={memoryFolder}
+        setFolder={setMemoryFolder}
+        selected={selectedMemory}
+        setSelected={setSelectedMemory}
+        openBubble={openBubble}
+      />}
+
       {tab==="history" && <section>
         <div className="page-title"><p className="soft">BUBBLE REMEMBERS</p><h2>Your story so far</h2></div>
         <section className="ask card">
@@ -360,6 +362,7 @@ export default function Home() {
         </div>
       </section>}
 
+      {selectedMemory && <MemoryModal memory={selectedMemory} onClose={()=>setSelectedMemory(null)} openBubble={(key)=>{setSelectedMemory(null);openBubble(key)}}/>}
       {activeStat && <StatDetail statKey={activeStat} value={game.stats[activeStat]} entries={entries} onClose={()=>setActiveStat(null)}/>}
       <footer>Built with 🫧, stubbornness, and an entirely reasonable number of “ew”s.</footer>
     </main>
@@ -425,9 +428,102 @@ function BubbleDetail({bubbleKey,bubble,snapshot,text,setText,loading,notice,sub
 
     <section className="bubble-history">
       <div className="daily-title"><h3>Recent {bubble.name.toLowerCase()} history</h3><span>{snapshot.relevant.length} entries</span></div>
-      {snapshot.recent.length ? snapshot.recent.map(e=><article className="entry card" key={e.id}><time>{new Date(e.created_at).toLocaleDateString([],{dateStyle:"medium"})}</time><h3>{e.summary}</h3><p>{e.raw_text}</p>{e.encouragement&&<blockquote>{e.encouragement}</blockquote>}</article>) : <div className="card empty">This Bubble is ready for its first real update. 🫧</div>}
+      {snapshot.recent.length ? snapshot.recent.map(e=><button className="entry card memory-entry-button" key={e.id} onClick={()=>window.dispatchEvent(new CustomEvent("open-bubble-memory",{detail:e}))}><time>{new Date(e.created_at).toLocaleDateString([],{dateStyle:"medium"})}</time><h3>{e.summary}</h3><p>{e.raw_text}</p>{e.encouragement&&<blockquote>{e.encouragement}</blockquote>}</button>) : <div className="card empty">This Bubble is ready for its first real update. 🫧</div>}
     </section>
   </section>
+}
+
+
+function ZeroStatQuestions({stats,onAnswer}){
+  const prompts={
+    strength:"What strength work have you done lately—squats, push-ups, curls, weights, bands, or anything similar? Include counts when you know them.",
+    agility:"How much have you walked, climbed stairs, swam, or done cardio lately? Miles, minutes, steps, or flights all work.",
+    health:"What have you eaten and drunk today? Especially protein, fruit, vegetables, and water.",
+    sleep:"How many hours did you sleep last night, and how would you rate the quality from 1–5?",
+    resilience:"What hard thing have you handled recently, and what did you do to protect or support yourself?",
+    wisdom:"What have you realized about yourself lately—any pattern, need, value, or lesson?",
+    social:"Who have you connected with lately, and how did that interaction actually feel?",
+    creativity:"Have you made, styled, written, drawn, designed, or expressed anything lately?",
+    finance:"Have you spent, earned, saved, budgeted, or planned any money recently?"
+  };
+  const missing=Object.keys(prompts).filter(key=>stats[key]===0);
+  if(!missing.length)return null;
+  return <section className="zero-stat card">
+    <p className="soft">START YOUR EMPTY STATS</p>
+    <h3>Bubble needs a little context</h3>
+    <p>You are not supposed to know what to log. Tap one and Bubble will ask the exact question.</p>
+    <div>{missing.slice(0,5).map(key=><button key={key} onClick={()=>onAnswer(prompts[key])}><span>{key}</span><em>Start →</em></button>)}</div>
+  </section>
+}
+
+function MemoryLibrary({entries,folder,setFolder,selected,setSelected,openBubble}){
+  const folders=[
+    ["all","🫧","All memories"],
+    ["body","💪","Body"],
+    ["relationships","❤️","Relationships"],
+    ["mind","🧠","Mind"],
+    ["work","💼","Work"],
+    ["money","💰","Money"],
+    ["creativity","🎨","Creativity"],
+    ["fun","🎮","Fun"],
+    ["growth","🌱","Growth"]
+  ];
+  const filtered=folder==="all"?entries:entries.filter(e=>(e.categories||[]).includes(folder));
+  const grouped=filtered.reduce((acc,e)=>{
+    const key=new Intl.DateTimeFormat("en-US",{timeZone:BUBBLE_TIME_ZONE,year:"numeric",month:"long"}).format(new Date(e.created_at));
+    (acc[key] ||= []).push(e);
+    return acc;
+  },{});
+  return <section className="memory-library">
+    <div className="page-title"><p className="soft">TOTAL MEMORIES</p><h2>Your memory library</h2><p>Every check-in lives here and is also filed inside its relevant Bubble folders.</p></div>
+    <div className="memory-folders">
+      {folders.map(([key,icon,label])=><button key={key} className={folder===key?"active":""} onClick={()=>setFolder(key)}><span>{icon}</span><b>{label}</b><small>{key==="all"?entries.length:entries.filter(e=>(e.categories||[]).includes(key)).length}</small></button>)}
+    </div>
+    <div className="memory-groups">
+      {Object.entries(grouped).map(([month,items])=><section key={month}>
+        <div className="memory-month"><h3>{month}</h3><span>{items.length} memories</span></div>
+        <div className="memory-grid">
+          {items.map(memory=><button key={memory.id} className="memory-card card" onClick={()=>setSelected(memory)}>
+            <time>{new Intl.DateTimeFormat("en-US",{timeZone:BUBBLE_TIME_ZONE,month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(memory.created_at))}</time>
+            <h3>{memory.summary||memory.raw_text}</h3>
+            <p>{memory.raw_text}</p>
+            <div>{(memory.categories||["life"]).map(c=><span key={c}>{c}</span>)}</div>
+          </button>)}
+        </div>
+      </section>)}
+      {!filtered.length&&<div className="empty card">No memories in this folder yet. Bubble will help you start it. 🫧</div>}
+    </div>
+  </section>
+}
+
+function MemoryModal({memory,onClose,openBubble}){
+  return <div className="memory-modal-backdrop" onClick={onClose}>
+    <section className="memory-modal card" onClick={e=>e.stopPropagation()}>
+      <button className="stat-close" onClick={onClose}>×</button>
+      <p className="soft">MEMORY</p>
+      <time>{new Intl.DateTimeFormat("en-US",{timeZone:BUBBLE_TIME_ZONE,dateStyle:"full",timeStyle:"short"}).format(new Date(memory.created_at))}</time>
+      <h2>{memory.summary||memory.raw_text}</h2>
+      <p className="memory-full-text">{memory.raw_text}</p>
+      {memory.encouragement&&<blockquote>{memory.encouragement}</blockquote>}
+      <div className="memory-tags">{(memory.categories||["life"]).map(c=><button key={c} onClick={()=>openBubble(c)}>{c}</button>)}</div>
+      <MemoryData data={memory.data||{}}/>
+    </section>
+  </div>
+}
+
+function MemoryData({data}){
+  const items=[
+    ["Calories",data.calories&&`~${Math.round(data.calories)}`],
+    ["Protein",data.protein_g&&`${Math.round(data.protein_g)}g`],
+    ["Miles",data.miles&&Number(data.miles).toFixed(2)],
+    ["Squats",data.squats&&Math.round(data.squats)],
+    ["Water",data.water_oz&&`${Math.round(data.water_oz)} oz`],
+    ["Sleep",data.sleep_hours&&`${Number(data.sleep_hours).toFixed(1)} hr`],
+    ["Mood",data.mood],
+    ["Spending",data.spending&&`$${Number(data.spending).toFixed(2)}`]
+  ].filter(([,value])=>value);
+  if(!items.length)return null;
+  return <div className="memory-data">{items.map(([label,value])=><span key={label}><small>{label}</small><b>{value}</b></span>)}</div>
 }
 
 function Mini({icon,label,value}){return <article className="mini card"><span>{icon}</span><small>{label}</small><b>{value}</b></article>}

@@ -60,3 +60,13 @@ Add later when API credits work:
 - Creativity no longer increases from generic fun entries.
 - Existing built-in seed records are replaced with corrected records while preserving entries the user added.
 - Entries with exercise types but no documented counts or duration remain visible in History but do not create invented stat points.
+
+## V2.7 update
+- Removes the avatar completely.
+- Cleans up the Home layout and condenses the level/date/memory overview.
+- Adds a clickable Memories tab with folders for every Bubble.
+- Makes the total memory count clickable.
+- Makes each memory clickable for its complete text, stats, encouragement, date, and Bubble tags.
+- Keeps memories visible inside their related Bubble history.
+- Adds exact starter questions for every stat still at 0.
+- Empty stats no longer leave the user guessing what to log.
