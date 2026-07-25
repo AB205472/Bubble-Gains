@@ -9,15 +9,52 @@ const STORE = "bubble_v2_entries";
 const SEEDED = "bubble_v26_seeded";
 
 const BUBBLES = {
-  body: { icon:"💪", name:"Body", color:"lavender", blurb:"Food, movement, weight, strength and health" },
-  relationships: { icon:"❤️", name:"Relationships", color:"pink", blurb:"Justin, Nat, family, closeness and boundaries" },
-  mind: { icon:"🧠", name:"Mind", color:"blue", blurb:"Mood, grief, confidence and nervous-system days" },
-  work: { icon:"💼", name:"Work", color:"mint", blurb:"Accounting, payroll, burnout and career direction" },
-  money: { icon:"💰", name:"Money", color:"gold", blurb:"Spending, budgets, income and freedom plans" },
-  creativity: { icon:"🎨", name:"Creativity", color:"pink", blurb:"Art, ideas, style and things that feel like you" },
-  fun: { icon:"🎮", name:"Fun", color:"blue", blurb:"RuneScape, trips, swimming and joy for no reason" },
-  growth: { icon:"🌱", name:"Growth", color:"mint", blurb:"The person you are actively becoming" }
+  body: { icon:"body", name:"Body", color:"lavender", blurb:"Food, movement, weight, strength and health" },
+  relationships: { icon:"relationships", name:"Relationships", color:"pink", blurb:"Justin, Nat, family, closeness and boundaries" },
+  mind: { icon:"mind", name:"Mind", color:"blue", blurb:"Mood, grief, confidence and nervous-system days" },
+  work: { icon:"work", name:"Work", color:"mint", blurb:"Accounting, payroll, burnout and career direction" },
+  money: { icon:"money", name:"Money", color:"gold", blurb:"Spending, budgets, income and freedom plans" },
+  creativity: { icon:"creativity", name:"Creativity", color:"pink", blurb:"Art, ideas, style and things that feel like you" },
+  fun: { icon:"fun", name:"Fun", color:"blue", blurb:"RuneScape, trips, swimming and joy for no reason" },
+  growth: { icon:"growth", name:"Growth", color:"mint", blurb:"The person you are actively becoming" }
 };
+
+
+const ICONS = {
+  bubble: ["M12 3.5c-4.7 0-8.5 3.5-8.5 7.8 0 2.6 1.4 4.9 3.7 6.3l-.7 3 3.1-1.7c.8.2 1.6.3 2.4.3 4.7 0 8.5-3.5 8.5-7.9S16.7 3.5 12 3.5Z","M8.4 9.1h.1M15.5 8.2h.1M12 13.8c1.3 0 2.4-.6 3.1-1.5"],
+  strength: ["M7.5 10.5v3M16.5 10.5v3M5 9.5v5M19 9.5v5M9 12h6","M8 7.5c.3-2 1.7-3.2 4-3.2s3.7 1.2 4 3.2"],
+  agility: ["M4 15.5c3.3-1.4 5.6-4 7.2-8 1.6 2 2.2 4.2 1.8 6.5 2.5-.5 4.6-1.7 6.5-3.6-1 5.2-4 8.2-9 8.2-2.6 0-4.8-1-6.5-3.1Z","M8.5 17.5 6.7 20M14.5 17.4l1.9 2.6"],
+  health: ["M12 20s-7-4.2-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.8-7 10-7 10Z","M9.5 11.5h5M12 9v5"],
+  sleep: ["M17.8 16.5A7.5 7.5 0 0 1 8 6.2a7 7 0 1 0 9.8 10.3Z","M16 5l.7 1.5L18 7l-1.3.5L16 9l-.6-1.5L14 7l1.4-.5L16 5Z"],
+  resilience: ["M12 3.5 19 7v5.2c0 4-2.8 6.9-7 8.3-4.2-1.4-7-4.3-7-8.3V7l7-3.5Z","m9.2 12 1.8 1.8 4-4"],
+  wisdom: ["M9 18h6M9.5 21h5","M8.2 14.8C6.8 13.7 6 12 6 10a6 6 0 1 1 12 0c0 2-.8 3.7-2.2 4.8-.8.7-1.2 1.4-1.3 2.2h-5c-.1-.8-.5-1.5-1.3-2.2Z","M12 3.5v2M4.8 6.1l1.5 1M19.2 6.1l-1.5 1"],
+  social: ["M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM15.8 10.3a2.8 2.8 0 1 0 0-5.6","M3.5 20v-2.2c0-3.1 2.4-5.3 5.5-5.3s5.5 2.2 5.5 5.3V20M14.5 13.3c3.2-.2 5.7 1.6 6 4.7v2"],
+  creativity: ["M5 19c3.4-4.8 6.6-8 11.8-12.8l2 2C14 13.3 10.8 16.4 6 20l-1-1Z","M14.8 8.1l2.8 2.8M4 20l3-.8-2.2-2.2L4 20Z","M18.5 3.5l.5 1.1 1.2.4-1.2.5-.5 1.1-.5-1.1-1.2-.5 1.2-.4.5-1.1Z"],
+  finance: ["M4 7.5h16v11H4z","M7 7.5V5h10v2.5M8 13h8M12 10v6"],
+  body: ["M9 7.5a3 3 0 1 1 6 0v2.2c0 .9.4 1.8 1.1 2.4 1.5 1.2 2.4 3 2.4 5v2.4h-13v-2.4c0-2 .9-3.8 2.4-5A3.1 3.1 0 0 0 9 9.7V7.5Z"],
+  relationships: ["M12 20s-7-4.2-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.8-7 10-7 10Z"],
+  mind: ["M9.2 19.5H8a4 4 0 0 1-4-4c0-1.4.7-2.7 1.8-3.4A4.5 4.5 0 0 1 9.5 5c.9-1.4 2.5-2.3 4.3-2.3A5.2 5.2 0 0 1 19 8v.5a4.8 4.8 0 0 1 1 8.8","M9 8.5c1.7.3 2.8 1.3 3 3M12 11.5c1.9-.2 3.2.6 4 2.2M9.2 19.5V15h5.3v4.5"],
+  work: ["M4 8h16v11H4z","M9 8V5h6v3M4 12.5h16M10 12.5v1h4v-1"],
+  money: ["M12 3.5v17M16 7c-.7-1.4-2-2-4-2-2.2 0-3.5 1-3.5 2.6 0 1.7 1.2 2.5 3.8 3.1 2.5.6 3.7 1.4 3.7 3.2 0 1.8-1.5 3.1-4 3.1-2.1 0-3.7-.8-4.5-2.4"],
+  fun: ["M7 9h10l2.5 7.5a2 2 0 0 1-3.2 2.1L14 16h-4l-2.3 2.6a2 2 0 0 1-3.2-2.1L7 9Z","M9 12v3M7.5 13.5h3M15.5 12.8h.1M17.2 14.5h.1"],
+  growth: ["M12 20v-8M12 14c-3.8 0-6-2-6-5.5 3.7 0 6 2 6 5.5ZM12 11c3.8 0 6-2 6-5.5-3.7 0-6 2-6 5.5Z"],
+  memories: ["M5 5.5h14v14H5z","M8 9h8M8 12h8M8 15h5"],
+  history: ["M12 7v5l3 2","M4.5 8A8 8 0 1 1 4 15M4 4v4h4"],
+  milestone: ["M12 3.5 14.2 8l4.8.7-3.5 3.4.8 4.8L12 14.6 7.7 17l.8-4.8L5 8.7 9.8 8 12 3.5Z"],
+  achievement: ["M8 4.5h8v5a4 4 0 0 1-8 0v-5Z","M8 6H5v1.5A3.5 3.5 0 0 0 8.5 11M16 6h3v1.5A3.5 3.5 0 0 1 15.5 11M12 13.5V18M9 20h6"],
+  flower: ["M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z","M12 9.5c-3.5-1-4.4-4.3-2-5.5 2 1 2.4 3.2 1.6 5.5M14 10c1-3.5 4.3-4.4 5.5-2-1 2-3.2 2.4-5.5 1.6M14.2 14c3.5 1 4.4 4.3 2 5.5-2-1-2.4-3.2-1.6-5.5M10 14.2c-1 3.5-4.3 4.4-5.5 2 1-2 3.2-2.4 5.5-1.6"],
+  butterfly: ["M11.5 12c-1.8-4.8-5-6.7-7-4.8-1.4 1.4.2 4.4 4.7 5.3-4.5.9-6.1 3.9-4.7 5.3 2 1.9 5.2 0 7-4.8M12.5 12c1.8-4.8 5-6.7 7-4.8 1.4 1.4-.2 4.4-4.7 5.3 4.5.9 6.1 3.9 4.7 5.3-2 1.9-5.2 0-7-4.8M12 9v10"],
+  heart: ["M12 20s-7-4.2-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.8-7 10-7 10Z"],
+  smile: ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z","M8.5 10h.1M15.5 10h.1M8.5 14c1 1.5 2.2 2.2 3.5 2.2s2.5-.7 3.5-2.2"],
+  arrow: ["M5 12h13M14 7l5 5-5 5"]
+};
+
+function BubbleIcon({name,size=24,className=""}){
+  const paths=ICONS[name] || ICONS.bubble;
+  return <svg className={`bubble-icon-svg ${className}`} width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    {paths.map((path,index)=><path key={index} d={path} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>)}
+  </svg>;
+}
 
 function supabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -206,7 +243,7 @@ export default function Home() {
       <header className="header">
         <div className="brand">
           <span className="tiny">ALLI'S LIFE LEARNING BUBBLE</span>
-          <h1>Bubble <span>🫧</span></h1>
+          <h1>Bubble <span><BubbleIcon name="bubble" size={30}/></span></h1>
           <p>Live your life. Bubble organizes it.</p>
         </div>
         <button className="level-chip" onClick={()=>setTab("home")}>
@@ -248,15 +285,15 @@ export default function Home() {
               <small>Tap any stat to see exactly where it came from.</small>
             </div>
             <div className="stat-list">
-              <Stat name="Strength" icon="💪" value={game.stats.strength} desc="squats + resistance + workouts" onClick={()=>setActiveStat("strength")}/>
-              <Stat name="Agility" icon="🪽" value={game.stats.agility} desc="walking + stairs + movement" onClick={()=>setActiveStat("agility")}/>
-              <Stat name="Health" icon="🍓" value={game.stats.health} desc="fuel + hydration + consistency" onClick={()=>setActiveStat("health")}/>
-              <Stat name="Sleep" icon="🌙" value={game.stats.sleep} desc="hours + sleep quality" onClick={()=>setActiveStat("sleep")}/>
-              <Stat name="Resilience" icon="🛡️" value={game.stats.resilience} desc="showing up through hard things" onClick={()=>setActiveStat("resilience")}/>
-              <Stat name="Wisdom" icon="🔮" value={game.stats.wisdom} desc="reflection + patterns" onClick={()=>setActiveStat("wisdom")}/>
-              <Stat name="Social" icon="💞" value={game.stats.social} desc="connection + boundaries" onClick={()=>setActiveStat("social")}/>
-              <Stat name="Creativity" icon="🎨" value={game.stats.creativity} desc="art + play + expression" onClick={()=>setActiveStat("creativity")}/>
-              <Stat name="Finance" icon="🪙" value={game.stats.finance} desc="money awareness + planning" onClick={()=>setActiveStat("finance")}/>
+              <Stat name="Strength" icon="strength" value={game.stats.strength} desc="squats + resistance + workouts" onClick={()=>setActiveStat("strength")}/>
+              <Stat name="Agility" icon="agility" value={game.stats.agility} desc="walking + stairs + movement" onClick={()=>setActiveStat("agility")}/>
+              <Stat name="Health" icon="health" value={game.stats.health} desc="fuel + hydration + consistency" onClick={()=>setActiveStat("health")}/>
+              <Stat name="Sleep" icon="sleep" value={game.stats.sleep} desc="hours + sleep quality" onClick={()=>setActiveStat("sleep")}/>
+              <Stat name="Resilience" icon="resilience" value={game.stats.resilience} desc="showing up through hard things" onClick={()=>setActiveStat("resilience")}/>
+              <Stat name="Wisdom" icon="wisdom" value={game.stats.wisdom} desc="reflection + patterns" onClick={()=>setActiveStat("wisdom")}/>
+              <Stat name="Social" icon="social" value={game.stats.social} desc="connection + boundaries" onClick={()=>setActiveStat("social")}/>
+              <Stat name="Creativity" icon="creativity" value={game.stats.creativity} desc="art + play + expression" onClick={()=>setActiveStat("creativity")}/>
+              <Stat name="Finance" icon="finance" value={game.stats.finance} desc="money awareness + planning" onClick={()=>setActiveStat("finance")}/>
             </div>
             <ZeroStatQuestions
               stats={game.stats}
@@ -285,22 +322,22 @@ export default function Home() {
 
             <section className="daily-title"><h3>Today's totals</h3><span>{today.entries} Central-time check-in{today.entries===1?"":"s"}</span></section>
             <section className="today-grid">
-              <Mini icon="🔥" label="Calories" value={today.calories?`~${fmt(today.calories)}`:"—"}/>
-              <Mini icon="🥚" label="Protein" value={today.protein?`${fmt(today.protein)}g`:"—"}/>
-              <Mini icon="🚶‍♀️" label="Miles walked" value={today.miles?fmt(today.miles,2):"—"}/>
-              <Mini icon="💪" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
-              <Mini icon="💧" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
-              <Mini icon="🌙" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
+              <Mini icon="health" label="Calories" value={today.calories?`~${fmt(today.calories)}`:"—"}/>
+              <Mini icon="health" label="Protein" value={today.protein?`${fmt(today.protein)}g`:"—"}/>
+              <Mini icon="agility" label="Miles walked" value={today.miles?fmt(today.miles,2):"—"}/>
+              <Mini icon="strength" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
+              <Mini icon="health" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
+              <Mini icon="sleep" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
             </section>
 
             <section className="checkin card">
-              <div className="section-head"><div><p className="soft">STAT CHECK</p><h3>Bubble is missing a few things</h3></div><span className="pulse">?</span></div>
+              <div className="section-head"><div><p className="soft">STAT CHECK</p><h3>Bubble is missing a few things</h3></div><span className="pulse"><BubbleIcon name="smile" size={20}/></span></div>
               {checkQuestions.length ? checkQuestions.map(q=><button key={q} onClick={()=>answerQuestion(q)}>{q}<span>Answer →</span></button>) :
               <p className="complete">Everything important is updated for today. Tiny victory. ✨</p>}
             </section>
 
             <section className="quests card">
-              <div className="section-head"><div><p className="soft">DAILY QUESTS</p><h3>Today's little missions</h3></div><span>🎀</span></div>
+              <div className="section-head"><div><p className="soft">DAILY QUESTS</p><h3>Today's little missions</h3></div><span><BubbleIcon name="heart" size={26}/></span></div>
               <Quest done={today.miles>=1} label="Walk at least one mile" reward="+8 agility XP"/>
               <Quest done={today.squats>=60} label="Complete 60 squats" reward="+8 strength XP"/>
               <Quest done={today.protein>=80} label="Reach 80g protein" reward="+6 health XP"/>
@@ -309,15 +346,15 @@ export default function Home() {
             </section>
 
             <section className="sparkle-shelf card">
-              <div className="section-head"><div><p className="soft">SPECIAL THINGS</p><h3>Milestones & achievements</h3></div><span>🌸</span></div>
+              <div className="section-head"><div><p className="soft">SPECIAL THINGS</p><h3>Milestones & achievements</h3></div><span><BubbleIcon name="flower" size={28}/></span></div>
               <div className="sparkle-grid">
                 <div>
                   <h4>Milestones</h4>
-                  {game.milestones.length ? game.milestones.slice(0,3).map(item=><button key={item.id} onClick={()=>setSelectedMemory(item.entry)}>💗 {item.text}</button>) : <p>No milestone recorded yet. They are supposed to be rare.</p>}
+                  {game.milestones.length ? game.milestones.slice(0,3).map(item=><button key={item.id} onClick={()=>setSelectedMemory(item.entry)}><BubbleIcon name="heart" size={17}/> {item.text}</button>) : <p>No milestone recorded yet. They are supposed to be rare.</p>}
                 </div>
                 <div>
                   <h4>Achievements</h4>
-                  {game.achievements.length ? game.achievements.slice(-3).map(item=><span key={item.id}>{item.icon} <b>{item.name}</b><small>{item.detail}</small></span>) : <p>Your first achievement is waiting. 🫧</p>}
+                  {game.achievements.length ? game.achievements.slice(-3).map(item=><span key={item.id}><BubbleIcon name={item.icon} size={18}/> <b>{item.name}</b><small>{item.detail}</small></span>) : <p>Your first achievement is waiting. 🫧</p>}
                 </div>
               </div>
             </section>
@@ -333,7 +370,7 @@ export default function Home() {
       {tab==="bubbles" && <section>
         <div className="page-title"><p className="soft">ONE LIFE, DIFFERENT VIEWS</p><h2>Your Bubbles</h2><p>Click any Bubble to see its overview, stats, history, and add an update directly.</p></div>
         <div className="bubble-grid">
-          {Object.entries(BUBBLES).map(([key,b])=><button className={`bubble-card ${b.color}`} key={key} onClick={()=>openBubble(key)}><span>{b.icon}</span><h3>{b.name}</h3><p>{b.blurb}</p><i>Open Bubble →</i></button>)}
+          {Object.entries(BUBBLES).map(([key,b])=><button className={`bubble-card ${b.color}`} key={key} onClick={()=>openBubble(key)}><span><BubbleIcon name={b.icon} size={32}/></span><h3>{b.name}</h3><p>{b.blurb}</p><i>Open Bubble →</i></button>)}
         </div>
       </section>}
 
@@ -387,40 +424,40 @@ function BubbleDetail({bubbleKey,bubble,snapshot,text,setText,loading,notice,sub
   const t=snapshot.totals;
   const stats = {
     body:[
-      ["🚶‍♀️","Miles",fmt(t.miles,2)],["💪","Squats",fmt(t.squats)],["⏱️","Workout min",fmt(t.workout)],
-      ["🥚","Protein logged",`${fmt(t.protein)}g`],["🌙","Avg sleep",t.sleepLogs?`${fmt(t.sleep/t.sleepLogs,1)} hr`:"—"]
+      ["agility","Miles",fmt(t.miles,2)],["strength","Squats",fmt(t.squats)],["strength","Workout min",fmt(t.workout)],
+      ["health","Protein logged",`${fmt(t.protein)}g`],["sleep","Avg sleep",t.sleepLogs?`${fmt(t.sleep/t.sleepLogs,1)} hr`:"—"]
     ],
     relationships:[
-      ["💞","Relationship entries",snapshot.relevant.length],["👥","People tracked",snapshot.people.length],
-      ["🌤️","Latest mood",snapshot.mood||"—"],["🛡️","Boundary growth",fmt(t.growth)]
+      ["social","Relationship entries",snapshot.relevant.length],["social","People tracked",snapshot.people.length],
+      ["mind","Latest mood",snapshot.mood||"—"],["resilience","Boundary growth",fmt(t.growth)]
     ],
     mind:[
-      ["🧠","Mind check-ins",snapshot.relevant.length],["🌤️","Latest mood",snapshot.mood||"—"],
-      ["🌱","Growth points",fmt(t.growth)],["🌙","Sleep logs",t.sleepLogs]
+      ["mind","Mind check-ins",snapshot.relevant.length],["mind","Latest mood",snapshot.mood||"—"],
+      ["growth","Growth points",fmt(t.growth)],["🌙","Sleep logs",t.sleepLogs]
     ],
     work:[
-      ["💼","Work check-ins",snapshot.relevant.length],["⚡","Latest stress",snapshot.latest?.data?.work_stress ?? "—"],
-      ["🌱","Growth points",fmt(t.growth)]
+      ["work","Work check-ins",snapshot.relevant.length],["mind","Latest stress",snapshot.latest?.data?.work_stress ?? "—"],
+      ["growth","Growth points",fmt(t.growth)]
     ],
     money:[
-      ["💸","Spending logged",`$${fmt(t.spending,2)}`],["🪙","Money check-ins",snapshot.relevant.length]
+      ["finance","Spending logged",`$${fmt(t.spending,2)}`],["finance","Money check-ins",snapshot.relevant.length]
     ],
     creativity:[
-      ["🎨","Creative moments",snapshot.relevant.length],["🌱","Growth points",fmt(t.growth)]
+      ["creativity","Creative moments",snapshot.relevant.length],["growth","Growth points",fmt(t.growth)]
     ],
     fun:[
-      ["🎮","Fun moments",snapshot.relevant.length],["🚶‍♀️","Adventure miles",fmt(t.miles,2)]
+      ["fun","Fun moments",snapshot.relevant.length],["🚶‍♀️","Adventure miles",fmt(t.miles,2)]
     ],
     growth:[
-      ["🌱","Growth entries",snapshot.relevant.length],["✨","Growth points",fmt(t.growth)],
-      ["🛡️","Times you showed up",snapshot.relevant.length]
+      ["growth","Growth entries",snapshot.relevant.length],["growth","Growth points",fmt(t.growth)],
+      ["resilience","Times you showed up",snapshot.relevant.length]
     ]
   }[bubbleKey] || [];
 
   return <section className="bubble-detail">
     <button className="back-button" onClick={back}>← All Bubbles</button>
     <section className={`bubble-overview card ${bubble.color}`}>
-      <div className="overview-icon">{bubble.icon}</div>
+      <div className="overview-icon"><BubbleIcon name={bubble.icon} size={46}/></div>
       <div className="overview-copy">
         <p className="soft">CURRENT {bubble.name.toUpperCase()} OVERVIEW</p>
         <h2>{bubble.name} Bubble</h2>
@@ -434,7 +471,7 @@ function BubbleDetail({bubbleKey,bubble,snapshot,text,setText,loading,notice,sub
     </section>
 
     <section className="bubble-update card">
-      <div className="section-head"><div><p className="soft">UPDATE THIS BUBBLE</p><h3>What changed in {bubble.name.toLowerCase()}?</h3></div><span>{bubble.icon}</span></div>
+      <div className="section-head"><div><p className="soft">UPDATE THIS BUBBLE</p><h3>What changed in {bubble.name.toLowerCase()}?</h3></div><span><BubbleIcon name={bubble.icon} size={30}/></span></div>
       <textarea value={text} onChange={e=>setText(e.target.value)} placeholder={`Tell Bubble anything about ${bubble.name.toLowerCase()}—no form, no organizing.`}/>
       <div className="send-row"><small>This update will always be saved inside the {bubble.name} Bubble, and can affect other stats too.</small><button className="primary" disabled={!text.trim()||loading} onClick={submit}>{loading?"Thinking...":"Update Bubble ✨"}</button></div>
       {notice && <div className="notice">{notice}</div>}
@@ -472,15 +509,15 @@ function ZeroStatQuestions({stats,onAnswer}){
 
 function MemoryLibrary({entries,folder,setFolder,selected,setSelected,openBubble}){
   const folders=[
-    ["all","🫧","All memories"],
-    ["body","💪","Body"],
-    ["relationships","❤️","Relationships"],
-    ["mind","🧠","Mind"],
-    ["work","💼","Work"],
-    ["money","💰","Money"],
-    ["creativity","🎨","Creativity"],
-    ["fun","🎮","Fun"],
-    ["growth","🌱","Growth"]
+    ["all","memories","All memories"],
+    ["body","body","Body"],
+    ["relationships","relationships","Relationships"],
+    ["mind","mind","Mind"],
+    ["work","work","Work"],
+    ["money","money","Money"],
+    ["creativity","creativity","Creativity"],
+    ["fun","fun","Fun"],
+    ["growth","growth","Growth"]
   ];
   const filtered=folder==="all"?entries:entries.filter(e=>(e.categories||[]).includes(folder));
   const grouped=filtered.reduce((acc,e)=>{
@@ -491,7 +528,7 @@ function MemoryLibrary({entries,folder,setFolder,selected,setSelected,openBubble
   return <section className="memory-library">
     <div className="page-title"><p className="soft">TOTAL MEMORIES</p><h2>Your memory library</h2><p>Every check-in lives here and is also filed inside its relevant Bubble folders.</p></div>
     <div className="memory-folders">
-      {folders.map(([key,icon,label])=><button key={key} className={folder===key?"active":""} onClick={()=>setFolder(key)}><span>{icon}</span><b>{label}</b><small>{key==="all"?entries.length:entries.filter(e=>(e.categories||[]).includes(key)).length}</small></button>)}
+      {folders.map(([key,icon,label])=><button key={key} className={folder===key?"active":""} onClick={()=>setFolder(key)}><span><BubbleIcon name={icon} size={24}/></span><b>{label}</b><small>{key==="all"?entries.length:entries.filter(e=>(e.categories||[]).includes(key)).length}</small></button>)}
     </div>
     <div className="memory-groups">
       {Object.entries(grouped).map(([month,items])=><section key={month}>
@@ -540,9 +577,9 @@ function MemoryData({data}){
   return <div className="memory-data">{items.map(([label,value])=><span key={label}><small>{label}</small><b>{value}</b></span>)}</div>
 }
 
-function Mini({icon,label,value}){return <article className="mini card"><span>{icon}</span><small>{label}</small><b>{value}</b></article>}
+function Mini({icon,label,value}){return <article className="mini card"><span><BubbleIcon name={icon} size={24}/></span><small>{label}</small><b>{value}</b></article>}
 function Quest({done,label,reward}){return <div className={`quest ${done?"done":""}`}><span>{done?"✓":"○"}</span><div><b>{label}</b><small>{reward}</small></div></div>}
-function Stat({name,icon,value,desc,onClick}){return <button className="stat card stat-button" onClick={onClick}><div className="stat-head"><span>{icon}</span><div><b>{name}</b><small>{desc}</small></div><strong>{value}</strong></div><div className="bar"><i style={{width:`${value}%`}}/></div><em>View sources →</em></button>}
+function Stat({name,icon,value,desc,onClick}){return <button className="stat card stat-button" onClick={onClick}><div className="stat-head"><span><BubbleIcon name={icon} size={26}/></span><div><b>{name}</b><small>{desc}</small></div><strong>{value}</strong></div><div className="bar"><i style={{width:`${value}%`}}/></div><em>View sources →</em></button>}
 
 function statContributions(entries,key){
   return entries
@@ -553,13 +590,32 @@ function statContributions(entries,key){
     .filter(entry => entry.points > 0)
     .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
+
+function explainContribution(statKey,entry){
+  const d=entry.data||{};
+  const explanations={
+    strength:"This memory contains documented strength work—squats, non-squat repetitions, or explicitly timed strength training. Bubble only counts the exact exercise data listed below.",
+    agility:"This memory contains documented movement that builds endurance or mobility—miles, steps, stairs, or explicitly timed cardio. Bubble does not count unrelated workouts here.",
+    health:"This memory contains nutrition or hydration data. Bubble links it because protein, produce, or water was explicitly recorded.",
+    sleep:"This memory contains an actual sleep duration or quality rating, so it directly updates the Sleep stat.",
+    resilience:"This memory records something you actually did to cope, recover, or protect your peace. A difficult feeling by itself would not count.",
+    wisdom:"This memory contains an explicit lesson, fact learned, or repeated pattern you noticed. Bubble does not count ordinary emotions or events as Wisdom.",
+    social:"This memory includes a named person, relationship event, or connection action, so it contributes to Social.",
+    creativity:"This memory records a specific creative or self-expression action, not merely a general fun activity.",
+    finance:"This memory contains spending or another concrete money action such as budgeting, saving, earning, or planning."
+  };
+  return explanations[statKey] || "This memory contains data directly used by this stat.";
+}
+
 function StatDetail({statKey,value,entries,onClose}){
-  const config={strength:["Strength","💪",0,"Only documented squats, non-squat strength repetitions, and explicitly timed strength training."],agility:["Agility","🪽",0,"Only documented miles, steps, flights of stairs, and explicitly timed cardio or active movement."],health:["Health","🍓",0,"Protein entries of at least 25g, documented fruit and vegetables, and hydration entries of at least 32 oz."],sleep:["Sleep","🌙",0,"One point for logging sleep, with additional points for seven or more hours and high reported sleep quality."],resilience:["Resilience","🛡️",0,"Only actions you actually took to cope, recover, or protect your peace."],wisdom:["Wisdom","🔮",0,"Only explicit lessons, facts learned, and repeated patterns you have actually noticed."],social:["Social","💞",0,"Relationship entries that name a person or a specific relationship event."],creativity:["Creativity","🎨",0,"Only specific creative or self-expression actions you actually did."],finance:["Finance","🪙",0,"Only entries explicitly categorized as money, spending, income, budgeting, or planning."]}[statKey];
+  const config={strength:["Strength","strength",0,"Only documented squats, non-squat strength repetitions, and explicitly timed strength training."],agility:["Agility","agility",0,"Only documented miles, steps, flights of stairs, and explicitly timed cardio or active movement."],health:["Health","health",0,"Protein entries of at least 25g, documented fruit and vegetables, and hydration entries of at least 32 oz."],sleep:["Sleep","sleep",0,"One point for logging sleep, with additional points for seven or more hours and high reported sleep quality."],resilience:["Resilience","resilience",0,"Only actions you actually took to cope, recover, or protect your peace."],wisdom:["Wisdom","wisdom",0,"Only explicit lessons, facts learned, and repeated patterns you have actually noticed."],social:["Social","social",0,"Relationship entries that name a person or a specific relationship event."],creativity:["Creativity","creativity",0,"Only specific creative or self-expression actions you actually did."],finance:["Finance","finance",0,"Only entries explicitly categorized as money, spending, income, budgeting, or planning."]}[statKey];
   const rows=statContributions(entries,statKey); const raw=rows.reduce((a,r)=>a+r.points,0);
   return <div className="stat-modal-backdrop" onClick={onClose}><section className="stat-modal card" onClick={e=>e.stopPropagation()}>
     <button className="stat-close" onClick={onClose}>×</button>
-    <div className="stat-modal-title"><span>{config[1]}</span><div><p className="soft">STAT BREAKDOWN</p><h2>{config[0]}: {value}</h2></div></div>
+    <div className="stat-modal-title"><span><BubbleIcon name={config[1]} size={36}/></span><div><p className="soft">STAT BREAKDOWN</p><h2>{config[0]}: {value}</h2></div></div>
     <p>{config[3]}</p><div className="stat-equation"><span>Starting score</span><b>{config[2]}</b><span>Logged progress</span><b>{raw.toFixed(1)}</b><span>Displayed score</span><b>{value}</b></div>
-    <h3>Entries that contributed</h3><div className="stat-sources">{rows.length?rows.map(r=><article key={r.id}><div><time>{new Date(r.created_at).toLocaleDateString("en-US",{timeZone:BUBBLE_TIME_ZONE,dateStyle:"medium"})}</time><b>+{r.points.toFixed(1)}</b></div><h4>{r.summary||r.raw_text}</h4><p>{r.reasons.join(" · ")}</p></article>):<p>No entries have contributed yet.</p>}</div>
+    <h3>Entries that contributed</h3><div className="stat-sources">{rows.length?rows.map(r=><article key={r.id}><div><time>{new Date(r.created_at).toLocaleDateString("en-US",{timeZone:BUBBLE_TIME_ZONE,dateStyle:"medium"})}</time><b>+{r.points.toFixed(1)}</b></div><h4>{r.summary||r.raw_text}</h4>
+          <div className="source-why"><b>Why Bubble linked this:</b><p>{explainContribution(statKey,r)}</p></div>
+          <div className="source-evidence"><b>Evidence used:</b><p>{r.reasons.join(" · ")}</p></div></article>):<p>No entries have contributed yet.</p>}</div>
   </section></div>
 }

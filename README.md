@@ -80,3 +80,10 @@ Add later when API credits work:
 - Recalculates all built-in history using explicit lessons, patterns, actions, and milestones.
 - Updates clickable source breakdowns to show the exact lesson, fact, pattern, action, or behavior that earned each point.
 - Adds Cherry Bomb One headers, clouds, hearts, smiley faces, butterflies, flowers, sparkles, and soft background decorations.
+
+## V2.9 update
+- Replaces interface emojis with an original line-icon system drawn directly in the app.
+- Adds custom icons for every stat, Bubble, memory folder, milestone, achievement, and decorative action.
+- Stat source cards now include a plain-language “Why Bubble linked this” explanation.
+- Each source still shows the exact evidence used, such as the specific lesson, pattern, miles, reps, water, or coping action.
+- The displayed score and source list continue to use the same shared calculation engine.

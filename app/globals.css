@@ -133,3 +133,27 @@ h1,h2,h3,.brand h1,.column-title h2,.memory-month h3,.stat-modal-title h2{font-f
 .clock-card:after{content:"☁️";position:absolute;right:12px;bottom:8px;font-size:1.4rem;opacity:.62}
 .memory-count-card:before{content:"♡";position:absolute;right:12px;top:8px;color:#e78fb4}
 @media(max-width:620px){.sparkle-grid{grid-template-columns:1fr}.hero:before,.page-title:before{font-size:1.6rem}}
+
+
+/* Bubble V2.9: custom icon system + explicit source reasoning */
+.bubble-icon-svg{display:inline-block;flex:0 0 auto;vertical-align:middle;color:currentColor}
+.stat-head>span,.mini>span,.overview-icon,.memory-folders button>span,.level-chip>span{
+  color:#9a78bd;
+}
+.stat-button:nth-child(3n+1) .bubble-icon-svg{color:#e487b2}
+.stat-button:nth-child(3n+2) .bubble-icon-svg{color:#8d77c9}
+.stat-button:nth-child(3n+3) .bubble-icon-svg{color:#6ca5bb}
+.bubble-card .bubble-icon-svg{color:#8f72ad}
+.bubble-card.pink .bubble-icon-svg{color:#dc7fa7}
+.bubble-card.blue .bubble-icon-svg{color:#6b9fb8}
+.bubble-card.mint .bubble-icon-svg{color:#69a77c}
+.bubble-card.gold .bubble-icon-svg{color:#c59a3d}
+.source-why,.source-evidence{margin-top:10px;padding:10px 12px;border-radius:13px}
+.source-why{background:#fff3f8;border:1px solid rgba(225,133,172,.18)}
+.source-evidence{background:#f5f1ff;border:1px solid rgba(146,118,190,.16)}
+.source-why b,.source-evidence b{display:block;font-size:.76rem;color:#7c607f;margin-bottom:3px}
+.source-why p,.source-evidence p{margin:0!important;line-height:1.45}
+.sparkle-grid button .bubble-icon-svg,.sparkle-grid span .bubble-icon-svg{margin-right:6px}
+.memory-folders button>span{display:block}
+.overview-icon{color:#8d6fb0}
+.level-chip>span{display:grid;place-items:center}
