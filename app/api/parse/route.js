@@ -7,6 +7,11 @@ const DATA_KEYS = [
   "sleep_hours","sleep_quality","weight_lb","fruit_veg",
   "spending","flights","growth_points","mood","relationship_event","work_stress"
 ];
+const ARRAY_KEYS = [
+  "foods","exercises","people","notes","lessons","facts_learned","patterns_noticed",
+  "coping_actions","boundaries","recovery_actions","connection_actions",
+  "creative_actions","money_actions","milestones"
+];
 
 function fallback(text) {
   const lower=text.toLowerCase();
@@ -20,7 +25,8 @@ function fallback(text) {
   if(!cats.length)cats.push("life");
   const data={};
   DATA_KEYS.forEach(k=>data[k]=null);
-  data.foods=[];data.exercises=[];data.people=[];data.notes=[text];
+  ARRAY_KEYS.forEach(key=>data[key]=[]);
+  data.notes=[text];
   data.squats=number(/(\d+)\s+(?:weighted\s+)?squats?/);
   data.miles=number(/(\d+(?:\.\d+)?)\s+miles?/);
   data.sleep_hours=number(/(?:slept|sleep)\s+(?:about\s+)?(\d+(?:\.\d+)?)\s+hours?/);
@@ -62,14 +68,19 @@ export async function POST(req){
           growth_points:{type:["number","null"]},mood:{type:["string","null"]},
           relationship_event:{type:["string","null"]},work_stress:{type:["number","null"]},
           foods:{type:"array",items:{type:"string"}},exercises:{type:"array",items:{type:"string"}},
-          people:{type:"array",items:{type:"string"}},notes:{type:"array",items:{type:"string"}}
-        },required:[...DATA_KEYS,"foods","exercises","people","notes"]},
+          people:{type:"array",items:{type:"string"}},notes:{type:"array",items:{type:"string"}},
+          lessons:{type:"array",items:{type:"string"}},facts_learned:{type:"array",items:{type:"string"}},
+          patterns_noticed:{type:"array",items:{type:"string"}},coping_actions:{type:"array",items:{type:"string"}},
+          boundaries:{type:"array",items:{type:"string"}},recovery_actions:{type:"array",items:{type:"string"}},
+          connection_actions:{type:"array",items:{type:"string"}},creative_actions:{type:"array",items:{type:"string"}},
+          money_actions:{type:"array",items:{type:"string"}},milestones:{type:"array",items:{type:"string"}}
+        },required:[...DATA_KEYS,...ARRAY_KEYS]},
         follow_up_questions:{type:"array",items:{type:"string"}}
       },required:["summary","encouragement","categories","data","follow_up_questions"]
     };
     const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({
       model,
-      instructions:`You are Bubble, Alli's personal life-game engine. Parse casual language with typos. Estimate food calories and protein honestly. Extract explicit workouts, miles, sleep, water, weight, mood, spending, people, and life events. A single update may affect many categories. strength_reps should approximate total resistance or bodyweight reps explicitly stated, without double-counting squats. sleep_quality is 1-5 only when stated or strongly clear. growth_points should be 0-10 for meaningful reflection, courage, boundary-setting, or body-image progress. encouragement must be specific, warm, and under two sentences. follow_up_questions should contain at most two truly useful missing questions, not an interrogation. Never diagnose.`,
+      instructions:`You are Bubble, Alli's personal life-game engine. Parse casual language with typos. Estimate food calories and protein honestly. Extract explicit workouts, miles, sleep, water, weight, mood, spending, people, and life events. A single update may affect many categories. strength_reps should approximate total resistance or bodyweight reps explicitly stated, without double-counting squats. sleep_quality is 1-5 only when stated or strongly clear. growth_points is retained for compatibility but should normally be null. Wisdom must come only from lessons, facts_learned, or patterns_noticed. A lesson is a transferable takeaway the user explicitly learned. A fact is concrete information learned. A pattern is a repeated relationship, behavior, sleep, emotional, work, or body pattern the user explicitly noticed. Do not label ordinary feelings, workouts, meals, or events as wisdom. Resilience must come only from coping_actions, boundaries, or recovery_actions that the user actually took. Creativity must come only from creative_actions. Finance must come only from money_actions or spending. Milestones should be rare, meaningful firsts or identity shifts—not routine logs. encouragement must be specific, warm, and under two sentences. follow_up_questions should contain at most two truly useful missing questions, not an interrogation. Never diagnose.`,
       input:body.text||"",
       text:{format:{type:"json_schema",name:"bubble_update",strict:true,schema}}
     })});

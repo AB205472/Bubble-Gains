@@ -126,7 +126,7 @@ export default function Home() {
 
   const game = useMemo(()=>calculateGame(entries),[entries]);
   const today = useMemo(()=>todayTotals(entries),[entries]);
-  const checkQuestions = useMemo(()=>missingCheckInQuestions(entries),[entries]);
+  const checkQuestions = useMemo(()=>missingCheckInQuestions(entries,game.stats),[entries,game.stats]);
   const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
   const centralDate = new Intl.DateTimeFormat("en-US", {
     timeZone:BUBBLE_TIME_ZONE, weekday:"long", month:"long", day:"numeric", year:"numeric"
@@ -306,6 +306,20 @@ export default function Home() {
               <Quest done={today.protein>=80} label="Reach 80g protein" reward="+6 health XP"/>
               <Quest done={today.water>=64} label="Drink 64 oz water" reward="+6 health XP"/>
               <Quest done={today.sleep>=7} label="Log 7+ hours of sleep" reward="+8 sleep XP"/>
+            </section>
+
+            <section className="sparkle-shelf card">
+              <div className="section-head"><div><p className="soft">SPECIAL THINGS</p><h3>Milestones & achievements</h3></div><span>🌸</span></div>
+              <div className="sparkle-grid">
+                <div>
+                  <h4>Milestones</h4>
+                  {game.milestones.length ? game.milestones.slice(0,3).map(item=><button key={item.id} onClick={()=>setSelectedMemory(item.entry)}>💗 {item.text}</button>) : <p>No milestone recorded yet. They are supposed to be rare.</p>}
+                </div>
+                <div>
+                  <h4>Achievements</h4>
+                  {game.achievements.length ? game.achievements.slice(-3).map(item=><span key={item.id}>{item.icon} <b>{item.name}</b><small>{item.detail}</small></span>) : <p>Your first achievement is waiting. 🫧</p>}
+                </div>
+              </div>
             </section>
 
             <section className="lifetime card">
@@ -540,7 +554,7 @@ function statContributions(entries,key){
     .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
 function StatDetail({statKey,value,entries,onClose}){
-  const config={strength:["Strength","💪",0,"Only documented squats, non-squat strength repetitions, and explicitly timed strength training."],agility:["Agility","🪽",0,"Only documented miles, steps, flights of stairs, and explicitly timed cardio or active movement."],health:["Health","🍓",0,"Protein entries of at least 25g, documented fruit and vegetables, and hydration entries of at least 32 oz."],sleep:["Sleep","🌙",0,"One point for logging sleep, with additional points for seven or more hours and high reported sleep quality."],resilience:["Resilience","🛡️",0,"Explicit growth points, honest emotional check-ins, and clearly documented boundary or clarity work."],wisdom:["Wisdom","🔮",0,"Entries explicitly marked as growth and records containing a named insight, value, need, or pattern."],social:["Social","💞",0,"Relationship entries that name a person or a specific relationship event."],creativity:["Creativity","🎨",0,"Only entries explicitly categorized as creativity or self-expression."],finance:["Finance","🪙",0,"Only entries explicitly categorized as money, spending, income, budgeting, or planning."]}[statKey];
+  const config={strength:["Strength","💪",0,"Only documented squats, non-squat strength repetitions, and explicitly timed strength training."],agility:["Agility","🪽",0,"Only documented miles, steps, flights of stairs, and explicitly timed cardio or active movement."],health:["Health","🍓",0,"Protein entries of at least 25g, documented fruit and vegetables, and hydration entries of at least 32 oz."],sleep:["Sleep","🌙",0,"One point for logging sleep, with additional points for seven or more hours and high reported sleep quality."],resilience:["Resilience","🛡️",0,"Only actions you actually took to cope, recover, or protect your peace."],wisdom:["Wisdom","🔮",0,"Only explicit lessons, facts learned, and repeated patterns you have actually noticed."],social:["Social","💞",0,"Relationship entries that name a person or a specific relationship event."],creativity:["Creativity","🎨",0,"Only specific creative or self-expression actions you actually did."],finance:["Finance","🪙",0,"Only entries explicitly categorized as money, spending, income, budgeting, or planning."]}[statKey];
   const rows=statContributions(entries,statKey); const raw=rows.reduce((a,r)=>a+r.points,0);
   return <div className="stat-modal-backdrop" onClick={onClose}><section className="stat-modal card" onClick={e=>e.stopPropagation()}>
     <button className="stat-close" onClick={onClose}>×</button>

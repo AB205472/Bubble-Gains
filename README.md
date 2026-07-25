@@ -70,3 +70,13 @@ Add later when API credits work:
 - Keeps memories visible inside their related Bubble history.
 - Adds exact starter questions for every stat still at 0.
 - Empty stats no longer leave the user guessing what to log.
+
+## V2.8 update
+- Wisdom is now only lessons, facts learned, and patterns noticed.
+- Routine workouts, meals, moods, and ordinary events no longer increase Wisdom.
+- Resilience is now based only on actual coping, recovery, and boundary actions.
+- Creativity is based only on specific creative actions.
+- Adds rare Milestones and threshold-based Achievements as separate systems.
+- Recalculates all built-in history using explicit lessons, patterns, actions, and milestones.
+- Updates clickable source breakdowns to show the exact lesson, fact, pattern, action, or behavior that earned each point.
+- Adds Cherry Bomb One headers, clouds, hearts, smiley faces, butterflies, flowers, sparkles, and soft background decorations.
