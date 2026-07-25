@@ -591,31 +591,84 @@ function statContributions(entries,key){
     .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
 
+
 function explainContribution(statKey,entry){
   const d=entry.data||{};
-  const explanations={
-    strength:"This memory contains documented strength work—squats, non-squat repetitions, or explicitly timed strength training. Bubble only counts the exact exercise data listed below.",
-    agility:"This memory contains documented movement that builds endurance or mobility—miles, steps, stairs, or explicitly timed cardio. Bubble does not count unrelated workouts here.",
-    health:"This memory contains nutrition or hydration data. Bubble links it because protein, produce, or water was explicitly recorded.",
-    sleep:"This memory contains an actual sleep duration or quality rating, so it directly updates the Sleep stat.",
-    resilience:"This memory records something you actually did to cope, recover, or protect your peace. A difficult feeling by itself would not count.",
-    wisdom:"This memory contains an explicit lesson, fact learned, or repeated pattern you noticed. Bubble does not count ordinary emotions or events as Wisdom.",
-    social:"This memory includes a named person, relationship event, or connection action, so it contributes to Social.",
-    creativity:"This memory records a specific creative or self-expression action, not merely a general fun activity.",
-    finance:"This memory contains spending or another concrete money action such as budgeting, saving, earning, or planning."
-  };
-  return explanations[statKey] || "This memory contains data directly used by this stat.";
-}
+  const summary=(entry.summary||entry.raw_text||"this memory").replace(/[.]+$/,"");
+  const reasons=(entry.reasons||[]);
+  const first=reasons[0]||"something directly relevant was recorded";
 
+  if(statKey==="strength"){
+    if(d.squats) return `Because in this memory, you actually did ${Math.round(Number(d.squats))} squats. That is not just “being active”—that is direct leg-strength work, so Bubble let this memory move Strength.`;
+    if(d.strength_reps) return `You logged ${Math.round(Number(d.strength_reps))} real strength reps here. Bubble linked it because your body had to push, pull, or resist—not just move around.`;
+    if(d.strength_minutes) return `You spent ${Math.round(Number(d.strength_minutes))} minutes intentionally strength training in this memory, so it belongs here.`;
+  }
+
+  if(statKey==="agility"){
+    if(d.miles) return `You moved ${Number(d.miles).toFixed(Number(d.miles)%1?2:0)} mile${Number(d.miles)===1?"":"s"} in this memory. Bubble counts that toward Agility because it built your movement endurance, not because the entry merely mentioned exercise.`;
+    if(d.steps) return `This one logged ${Math.round(Number(d.steps)).toLocaleString()} steps. That is concrete movement data, so Bubble used it to grow Agility.`;
+    if(d.flights) return `You climbed ${Math.round(Number(d.flights))} flight${Number(d.flights)===1?"":"s"} of stairs here. That directly challenged your movement and stamina, which is why this memory belongs under Agility.`;
+    if(d.cardio_minutes) return `You gave ${Math.round(Number(d.cardio_minutes))} minutes to cardio or active movement in this memory. Bubble linked the time you actually spent moving—not just the fact that a workout happened.`;
+  }
+
+  if(statKey==="health"){
+    const pieces=[];
+    if(d.protein_g) pieces.push(`${Math.round(Number(d.protein_g))}g of protein`);
+    if(d.fruit_veg) pieces.push(`${Number(d.fruit_veg)} fruit or vegetable serving${Number(d.fruit_veg)===1?"":"s"}`);
+    if(d.water_oz) pieces.push(`${Math.round(Number(d.water_oz))} oz of water`);
+    return `This memory gave Bubble real care data: ${pieces.join(", ")}. That is why it helped Health—because you fueled or hydrated yourself in a measurable way.`;
+  }
+
+  if(statKey==="sleep"){
+    return `You told Bubble you slept ${Number(d.sleep_hours).toFixed(Number(d.sleep_hours)%1?1:0)} hours${d.sleep_quality?` with a quality of ${d.sleep_quality}/5`:""}. Sleep can only learn from nights you actually record, so this memory directly shaped the stat.`;
+  }
+
+  if(statKey==="resilience"){
+    const action=(d.coping_actions||[])[0]||(d.boundaries||[])[0]||(d.recovery_actions||[])[0];
+    if(action) return `This memory mattered because you did something with the hard feeling: ${action}. Bubble counted the action—not just the pain—as Resilience.`;
+    return `Bubble linked “${summary}” because this memory records a real coping, recovery, or self-protection action.`;
+  }
+
+  if(statKey==="wisdom"){
+    const lesson=(d.lessons||[])[0];
+    const fact=(d.facts_learned||[])[0];
+    const pattern=(d.patterns_noticed||[])[0];
+    if(lesson) return `This memory taught you something you can carry forward: “${lesson}” That is exactly what Wisdom is supposed to hold.`;
+    if(fact) return `You learned a concrete fact here: “${fact}” Bubble linked it because this stat is about what you know now that you did not know before.`;
+    if(pattern) return `You noticed a repeated pattern here: “${pattern}” Bubble counted it because seeing the pattern gives you a better chance to choose differently next time.`;
+    return `Bubble linked “${summary}” because it contains a real lesson, fact, or pattern—not just an emotion or event.`;
+  }
+
+  if(statKey==="social"){
+    const people=(d.people||[]).join(", ");
+    if(d.relationship_event) return `This memory changed your relationship story: ${d.relationship_event}${people?` with ${people}`:""}. That is why it belongs under Social.`;
+    if(people) return `You were processing a real connection involving ${people}. Bubble linked it because Social is meant to reflect the relationships you are actually living through.`;
+  }
+
+  if(statKey==="creativity"){
+    const action=(d.creative_actions||[])[0];
+    return action
+      ? `You expressed yourself here by ${action.toLowerCase()}. Bubble linked the thing you actually made or chose—not just the fact that you had fun.`
+      : `This memory holds a specific act of self-expression, which is why it moved Creativity.`;
+  }
+
+  if(statKey==="finance"){
+    const action=(d.money_actions||[])[0];
+    if(action) return `You took a real money action here: ${action}. Bubble linked it because Finance should grow from choices and awareness, not shame.`;
+    if(d.spending) return `You recorded $${Number(d.spending).toFixed(2)} here. Bubble used this memory because honest spending awareness is part of building your Finance stat.`;
+  }
+
+  return `Bubble linked “${summary}” because ${first.toLowerCase()}.`;
+}
 function StatDetail({statKey,value,entries,onClose}){
   const config={strength:["Strength","strength",0,"Only documented squats, non-squat strength repetitions, and explicitly timed strength training."],agility:["Agility","agility",0,"Only documented miles, steps, flights of stairs, and explicitly timed cardio or active movement."],health:["Health","health",0,"Protein entries of at least 25g, documented fruit and vegetables, and hydration entries of at least 32 oz."],sleep:["Sleep","sleep",0,"One point for logging sleep, with additional points for seven or more hours and high reported sleep quality."],resilience:["Resilience","resilience",0,"Only actions you actually took to cope, recover, or protect your peace."],wisdom:["Wisdom","wisdom",0,"Only explicit lessons, facts learned, and repeated patterns you have actually noticed."],social:["Social","social",0,"Relationship entries that name a person or a specific relationship event."],creativity:["Creativity","creativity",0,"Only specific creative or self-expression actions you actually did."],finance:["Finance","finance",0,"Only entries explicitly categorized as money, spending, income, budgeting, or planning."]}[statKey];
   const rows=statContributions(entries,statKey); const raw=rows.reduce((a,r)=>a+r.points,0);
   return <div className="stat-modal-backdrop" onClick={onClose}><section className="stat-modal card" onClick={e=>e.stopPropagation()}>
     <button className="stat-close" onClick={onClose}>×</button>
-    <div className="stat-modal-title"><span><BubbleIcon name={config[1]} size={36}/></span><div><p className="soft">STAT BREAKDOWN</p><h2>{config[0]}: {value}</h2></div></div>
-    <p>{config[3]}</p><div className="stat-equation"><span>Starting score</span><b>{config[2]}</b><span>Logged progress</span><b>{raw.toFixed(1)}</b><span>Displayed score</span><b>{value}</b></div>
-    <h3>Entries that contributed</h3><div className="stat-sources">{rows.length?rows.map(r=><article key={r.id}><div><time>{new Date(r.created_at).toLocaleDateString("en-US",{timeZone:BUBBLE_TIME_ZONE,dateStyle:"medium"})}</time><b>+{r.points.toFixed(1)}</b></div><h4>{r.summary||r.raw_text}</h4>
-          <div className="source-why"><b>Why Bubble linked this:</b><p>{explainContribution(statKey,r)}</p></div>
-          <div className="source-evidence"><b>Evidence used:</b><p>{r.reasons.join(" · ")}</p></div></article>):<p>No entries have contributed yet.</p>}</div>
+    <div className="stat-modal-title"><span><BubbleIcon name={config[1]} size={36}/></span><div><p className="soft">YOUR STAT STORY</p><h2>{config[0]}: {value}</h2></div></div>
+    <p>{config[3]}</p><div className="stat-equation"><span>Where you started</span><b>{config[2]}</b><span>What you have built</span><b>{raw.toFixed(1)}</b><span>Where you are now</span><b>{value}</b></div>
+    <h3>Memories that built this</h3><div className="stat-sources">{rows.length?rows.map(r=><article key={r.id}><div><time>{new Date(r.created_at).toLocaleDateString("en-US",{timeZone:BUBBLE_TIME_ZONE,dateStyle:"medium"})}</time><b>+{r.points.toFixed(1)}</b></div><h4>{r.summary||r.raw_text}</h4>
+          <div className="source-why"><b>Why this mattered:</b><p>{explainContribution(statKey,r)}</p></div>
+          <div className="source-evidence"><b>What Bubble noticed:</b><p>{r.reasons.join(" · ")}</p></div></article>):<p>No entries have contributed yet.</p>}</div>
   </section></div>
 }

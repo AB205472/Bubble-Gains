@@ -87,3 +87,10 @@ Add later when API credits work:
 - Stat source cards now include a plain-language “Why Bubble linked this” explanation.
 - Each source still shows the exact evidence used, such as the specific lesson, pattern, miles, reps, water, or coping action.
 - The displayed score and source list continue to use the same shared calculation engine.
+
+## V3.0 update
+- Rewrites every stat-source explanation to be personal to the exact memory.
+- Explanations now use the actual miles, reps, lesson, pattern, boundary, person, creative action, or spending from that memory.
+- Renames system-like labels to conversational language: “Why this mattered,” “What Bubble noticed,” and “Memories that built this.”
+- Adds softer game-world backgrounds, pastel card variation, cloud shapes, dotted details, and more layered whimsical surfaces.
+- Keeps the exact evidence visible beneath the personal explanation.
