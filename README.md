@@ -34,3 +34,9 @@ Keep:
 Add later when API credits work:
 - OPENAI_API_KEY
 - OPENAI_MODEL = gpt-5-mini
+
+
+## V2.1 update
+- Every Bubble card is clickable.
+- Each Bubble has a motivational written overview, relevant stats, direct update box, and recent history.
+- Avatar is larger, round-profile style, animated on hover, and cycles motivational messages when clicked.

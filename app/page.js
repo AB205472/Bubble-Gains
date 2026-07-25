@@ -8,6 +8,17 @@ import { calculateGame, todayTotals, missingCheckInQuestions } from "../lib/game
 const STORE = "bubble_v2_entries";
 const SEEDED = "bubble_v2_seeded";
 
+const BUBBLES = {
+  body: { icon:"💪", name:"Body", color:"lavender", blurb:"Food, movement, weight, strength and health" },
+  relationships: { icon:"❤️", name:"Relationships", color:"pink", blurb:"Justin, Nat, family, closeness and boundaries" },
+  mind: { icon:"🧠", name:"Mind", color:"blue", blurb:"Mood, grief, confidence and nervous-system days" },
+  work: { icon:"💼", name:"Work", color:"mint", blurb:"Accounting, payroll, burnout and career direction" },
+  money: { icon:"💰", name:"Money", color:"gold", blurb:"Spending, budgets, income and freedom plans" },
+  creativity: { icon:"🎨", name:"Creativity", color:"pink", blurb:"Art, ideas, style and things that feel like you" },
+  fun: { icon:"🎮", name:"Fun", color:"blue", blurb:"RuneScape, trips, swimming and joy for no reason" },
+  growth: { icon:"🌱", name:"Growth", color:"mint", blurb:"The person you are actively becoming" }
+};
+
 function supabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,18 +33,82 @@ function save(entries) {
 function fmt(v, digits=0) {
   return Number(v || 0).toLocaleString(undefined,{maximumFractionDigits:digits});
 }
+function n(v){ return Number.isFinite(Number(v)) ? Number(v) : 0; }
+
+function filteredEntries(entries, key) {
+  return entries.filter(e => (e.categories || []).includes(key));
+}
+
+function bubbleSnapshot(entries, key) {
+  const relevant = filteredEntries(entries, key);
+  const totals = relevant.reduce((a,e)=>{
+    const d=e.data||{};
+    a.calories+=n(d.calories); a.protein+=n(d.protein_g); a.water+=n(d.water_oz);
+    a.miles+=n(d.miles); a.squats+=n(d.squats); a.workout+=n(d.workout_minutes);
+    a.sleep+=n(d.sleep_hours); if(d.sleep_hours!=null)a.sleepLogs++;
+    a.spending+=n(d.spending); a.growth+=n(d.growth_points);
+    if(d.mood)a.moods.push(d.mood);
+    (d.people||[]).forEach(p=>a.people[p]=(a.people[p]||0)+1);
+    return a;
+  },{calories:0,protein:0,water:0,miles:0,squats:0,workout:0,sleep:0,sleepLogs:0,spending:0,growth:0,moods:[],people:{}});
+
+  const recent = relevant.slice(0,3);
+  const latest = recent[0];
+  const people = Object.entries(totals.people).sort((a,b)=>b[1]-a[1]).map(([x])=>x).slice(0,3);
+  const mood = totals.moods[0];
+
+  const summaries = {
+    body: relevant.length
+      ? `You have been building consistency through small workday workouts, stronger gym sessions, walking, food honesty, and a gentler relationship with your body. You are not chasing perfection anymore—you are proving that you can keep showing up.`
+      : `This Bubble will become the home for your food, movement, strength, sleep and body-image progress.`,
+    relationships: relevant.length
+      ? `Your relationship history shows a huge heart, strong loyalty, and a growing awareness that closeness should not require abandoning yourself. You are learning to love people without making your own needs disappear.`
+      : `This Bubble will help you notice who feels safe, where you feel drained, and how your boundaries are growing.`,
+    mind: relevant.length
+      ? `You have been moving through grief, uncertainty, burnout and body-image shifts with more honesty than before. The pattern is not that you never struggle—the pattern is that you are getting better at hearing what the struggle is trying to tell you.`
+      : `This Bubble will track mood, stress, confidence, grief and the things that help you come back to yourself.`,
+    work: relevant.length
+      ? `Work has asked far too much of your time and mental energy. At the same time, you have become clearer about the life you actually want: meaningful work, enough money, art, peace, health and room to care about people.`
+      : `This Bubble will hold job stress, wins, projects, payroll chaos, career plans and your path toward freedom.`,
+    money: relevant.length
+      ? `You are starting to treat money as a tool for freedom rather than another source of shame. Every honest purchase, plan and goal makes this stat more useful.`
+      : `This Bubble is ready for spending, income, bills, savings and freedom planning—without judgment.`,
+    creativity: relevant.length
+      ? `Your creativity grows whenever you choose what feels like you instead of what you think you are supposed to look like or produce.`
+      : `This Bubble is waiting for your art, design ideas, outfits, writing and anything that makes your brain light up.`,
+    fun: relevant.length
+      ? `Fun is not wasted time. Swimming, games, trips and little moments of play are part of building a life you actually want to stay present for.`
+      : `This Bubble is for RuneScape, trips, lakes, games, hobbies and joy that does not need to earn its place.`,
+    growth: relevant.length
+      ? `Your clearest growth is that you are beginning to choose values over fear, honesty over appearances, and peace over chasing. You are still soft—you are just becoming less willing to disappear.`
+      : `This Bubble will collect the moments where you notice yourself changing.`
+  };
+
+  return { relevant, totals, recent, latest, people, mood, summary:summaries[key] };
+}
 
 export default function Home() {
   const [tab,setTab] = useState("home");
+  const [activeBubble,setActiveBubble] = useState("body");
   const [entries,setEntries] = useState([]);
   const [text,setText] = useState("");
+  const [bubbleText,setBubbleText] = useState("");
   const [loading,setLoading] = useState(false);
   const [notice,setNotice] = useState("");
   const [historyQuery,setHistoryQuery] = useState("");
   const [historyAnswer,setHistoryAnswer] = useState("");
   const [profileOpen,setProfileOpen] = useState(false);
   const [weight,setWeight] = useState("");
+  const [avatarMood,setAvatarMood] = useState(0);
   const supabase = useMemo(()=>supabaseClient(),[]);
+
+  const avatarMessages = [
+    "you got this, bestie ♡",
+    "drink some water, babe 🫧",
+    "progress counts even when it's messy",
+    "girl... log the sleep 😂",
+    "you are doing better than you think"
+  ];
 
   useEffect(()=>{
     const existing = JSON.parse(localStorage.getItem(STORE) || "[]");
@@ -49,26 +124,28 @@ export default function Home() {
   const game = useMemo(()=>calculateGame(entries),[entries]);
   const today = useMemo(()=>todayTotals(entries),[entries]);
   const checkQuestions = useMemo(()=>missingCheckInQuestions(entries),[entries]);
+  const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
 
-  async function submitLog(extraText="") {
+  async function submitLog(extraText="", preferredCategory=null) {
     const content = (extraText || text).trim();
     if (!content || loading) return;
     setLoading(true); setNotice("");
     try {
-      const res = await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"log",text:content,profile:PROFILE})});
+      const res = await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"log",text:content,profile:PROFILE,preferredCategory})});
       const parsed = await res.json();
       if (!res.ok) throw new Error(parsed.error || "Bubble had trouble reading that.");
+      const categories = [...new Set([...(parsed.categories || ["life"]), ...(preferredCategory ? [preferredCategory] : [])])];
       const record = {
         id: crypto.randomUUID(),
         created_at:new Date().toISOString(),
         raw_text:content,
         summary:parsed.summary || content,
         encouragement:parsed.encouragement || "You checked in. That counts. 🫧",
-        categories:parsed.categories || ["life"],
+        categories,
         data:parsed.data || {}
       };
       const next=[record,...entries];
-      setEntries(next); save(next); setText("");
+      setEntries(next); save(next); setText(""); setBubbleText("");
       if (supabase) {
         const { error } = await supabase.from("bubbles").insert(record);
         if (error) setNotice("Saved privately on this device. Cloud sync needs attention.");
@@ -97,13 +174,19 @@ export default function Home() {
   function addWeight() {
     const v=Number(weight);
     if(!v) return;
-    submitLog(`Current weight: ${v} pounds.`);
+    submitLog(`Current weight: ${v} pounds.`,"body");
     setWeight("");
     setProfileOpen(false);
   }
 
   function deleteEntry(id) {
     const next=entries.filter(e=>e.id!==id); setEntries(next); save(next);
+  }
+
+  function openBubble(key){
+    setActiveBubble(key);
+    setTab("bubble-detail");
+    window.scrollTo({top:0,behavior:"smooth"});
   }
 
   return (
@@ -115,18 +198,25 @@ export default function Home() {
           <p>Live your life. Bubble organizes it.</p>
         </div>
         <button className="profile-button" onClick={()=>setProfileOpen(!profileOpen)}>
-          <img src="/alli-avatar.svg" alt="Alli's Bubble avatar"/>
+          <div className="avatar-ring"><img src="/alli-avatar-v2.svg" alt="Alli's Bubble avatar"/></div>
           <span><b>Level {game.level}</b><small>Brave Bubble</small></span>
         </button>
       </header>
 
       {profileOpen && <section className="profile-pop card">
-        <div><b>{PROFILE.name}, {PROFILE.age}</b><small>{PROFILE.height} · {PROFILE.weightNote}</small></div>
-        <div className="weight-row"><input value={weight} onChange={e=>setWeight(e.target.value)} placeholder="New weight"/><button onClick={addWeight}>Update</button></div>
+        <div className="mini-profile-avatar" onClick={()=>setAvatarMood((avatarMood+1)%avatarMessages.length)}>
+          <img src="/alli-avatar-v2.svg" alt="Alli avatar"/>
+          <span>{avatarMessages[avatarMood]}</span>
+        </div>
+        <div className="profile-details">
+          <b>{PROFILE.name}, {PROFILE.age}</b><small>{PROFILE.height} · {PROFILE.weightNote}</small>
+          <div className="weight-row"><input value={weight} onChange={e=>setWeight(e.target.value)} placeholder="New weight"/><button onClick={addWeight}>Update</button></div>
+          <small>Tap the avatar. She talks now. 😂</small>
+        </div>
       </section>}
 
       <nav className="nav">
-        {["home","game","bubbles","history"].map(x=><button key={x} className={tab===x?"active":""} onClick={()=>setTab(x)}>{x==="game"?"Stats":x[0].toUpperCase()+x.slice(1)}</button>)}
+        {["home","game","bubbles","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x==="game"?"Stats":x[0].toUpperCase()+x.slice(1)}</button>)}
       </nav>
 
       {tab==="home" && <>
@@ -172,9 +262,11 @@ export default function Home() {
 
       {tab==="game" && <>
         <section className="game-top card">
-          <div className="avatar-stage">
-            <img src="/alli-avatar.svg" alt="Alli avatar"/>
-            <div className="speech">you got this,<br/><b>bestie ♡</b></div>
+          <div className="avatar-stage interactive-avatar" onClick={()=>setAvatarMood((avatarMood+1)%avatarMessages.length)}>
+            <div className="avatar-halo"></div>
+            <img src="/alli-avatar-v2.svg" alt="Alli avatar"/>
+            <div className="speech">{avatarMessages[avatarMood]}</div>
+            <div className="avatar-actions"><span>✨</span><span>🫧</span><span>💗</span></div>
           </div>
           <div className="level-panel">
             <p className="soft">CURRENT CLASS</p>
@@ -205,20 +297,23 @@ export default function Home() {
       </>}
 
       {tab==="bubbles" && <section>
-        <div className="page-title"><p className="soft">ONE LIFE, DIFFERENT VIEWS</p><h2>Your Bubbles</h2></div>
+        <div className="page-title"><p className="soft">ONE LIFE, DIFFERENT VIEWS</p><h2>Your Bubbles</h2><p>Click any Bubble to see its overview, stats, history, and add an update directly.</p></div>
         <div className="bubble-grid">
-          {[
-            ["💪","Body","Food, movement, weight, strength and health"],
-            ["❤️","Relationships","Justin, Nat, family, closeness and boundaries"],
-            ["🧠","Mind","Mood, grief, confidence and nervous-system days"],
-            ["💼","Work","Accounting, payroll, burnout and career direction"],
-            ["💰","Money","Spending, budgets, income and freedom plans"],
-            ["🎨","Creativity","Art, ideas, personal style and things that feel like you"],
-            ["🎮","Fun","RuneScape, trips, swimming and joy for no reason"],
-            ["🌱","Growth","The person you are actively becoming"]
-          ].map(([i,n,d])=><article className="bubble-card" key={n}><span>{i}</span><h3>{n}</h3><p>{d}</p></article>)}
+          {Object.entries(BUBBLES).map(([key,b])=><button className={`bubble-card ${b.color}`} key={key} onClick={()=>openBubble(key)}><span>{b.icon}</span><h3>{b.name}</h3><p>{b.blurb}</p><i>Open Bubble →</i></button>)}
         </div>
       </section>}
+
+      {tab==="bubble-detail" && <BubbleDetail
+        bubbleKey={activeBubble}
+        bubble={BUBBLES[activeBubble]}
+        snapshot={activeSnapshot}
+        text={bubbleText}
+        setText={setBubbleText}
+        loading={loading}
+        notice={notice}
+        submit={()=>submitLog(bubbleText,activeBubble)}
+        back={()=>setTab("bubbles")}
+      />}
 
       {tab==="history" && <section>
         <div className="page-title"><p className="soft">BUBBLE REMEMBERS</p><h2>Your story so far</h2></div>
@@ -241,6 +336,70 @@ export default function Home() {
       <footer>Built with 🫧, stubbornness, and an entirely reasonable number of “ew”s.</footer>
     </main>
   );
+}
+
+function BubbleDetail({bubbleKey,bubble,snapshot,text,setText,loading,notice,submit,back}){
+  const t=snapshot.totals;
+  const stats = {
+    body:[
+      ["🚶‍♀️","Miles",fmt(t.miles,2)],["💪","Squats",fmt(t.squats)],["⏱️","Workout min",fmt(t.workout)],
+      ["🥚","Protein logged",`${fmt(t.protein)}g`],["🌙","Avg sleep",t.sleepLogs?`${fmt(t.sleep/t.sleepLogs,1)} hr`:"—"]
+    ],
+    relationships:[
+      ["💞","Relationship entries",snapshot.relevant.length],["👥","People tracked",snapshot.people.length],
+      ["🌤️","Latest mood",snapshot.mood||"—"],["🛡️","Boundary growth",fmt(t.growth)]
+    ],
+    mind:[
+      ["🧠","Mind check-ins",snapshot.relevant.length],["🌤️","Latest mood",snapshot.mood||"—"],
+      ["🌱","Growth points",fmt(t.growth)],["🌙","Sleep logs",t.sleepLogs]
+    ],
+    work:[
+      ["💼","Work check-ins",snapshot.relevant.length],["⚡","Latest stress",snapshot.latest?.data?.work_stress ?? "—"],
+      ["🌱","Growth points",fmt(t.growth)]
+    ],
+    money:[
+      ["💸","Spending logged",`$${fmt(t.spending,2)}`],["🪙","Money check-ins",snapshot.relevant.length]
+    ],
+    creativity:[
+      ["🎨","Creative moments",snapshot.relevant.length],["🌱","Growth points",fmt(t.growth)]
+    ],
+    fun:[
+      ["🎮","Fun moments",snapshot.relevant.length],["🚶‍♀️","Adventure miles",fmt(t.miles,2)]
+    ],
+    growth:[
+      ["🌱","Growth entries",snapshot.relevant.length],["✨","Growth points",fmt(t.growth)],
+      ["🛡️","Times you showed up",snapshot.relevant.length]
+    ]
+  }[bubbleKey] || [];
+
+  return <section className="bubble-detail">
+    <button className="back-button" onClick={back}>← All Bubbles</button>
+    <section className={`bubble-overview card ${bubble.color}`}>
+      <div className="overview-icon">{bubble.icon}</div>
+      <div className="overview-copy">
+        <p className="soft">CURRENT {bubble.name.toUpperCase()} OVERVIEW</p>
+        <h2>{bubble.name} Bubble</h2>
+        <p className="overview-summary">{snapshot.summary}</p>
+        <p className="overview-motivation">{snapshot.latest?.encouragement || "Every honest update gives Bubble a clearer picture of how to support you."}</p>
+      </div>
+    </section>
+
+    <section className="bubble-stat-row">
+      {stats.map(([icon,label,value])=><Mini key={label} icon={icon} label={label} value={value}/>)}
+    </section>
+
+    <section className="bubble-update card">
+      <div className="section-head"><div><p className="soft">UPDATE THIS BUBBLE</p><h3>What changed in {bubble.name.toLowerCase()}?</h3></div><span>{bubble.icon}</span></div>
+      <textarea value={text} onChange={e=>setText(e.target.value)} placeholder={`Tell Bubble anything about ${bubble.name.toLowerCase()}—no form, no organizing.`}/>
+      <div className="send-row"><small>This update will always be saved inside the {bubble.name} Bubble, and can affect other stats too.</small><button className="primary" disabled={!text.trim()||loading} onClick={submit}>{loading?"Thinking...":"Update Bubble ✨"}</button></div>
+      {notice && <div className="notice">{notice}</div>}
+    </section>
+
+    <section className="bubble-history">
+      <div className="daily-title"><h3>Recent {bubble.name.toLowerCase()} history</h3><span>{snapshot.relevant.length} entries</span></div>
+      {snapshot.recent.length ? snapshot.recent.map(e=><article className="entry card" key={e.id}><time>{new Date(e.created_at).toLocaleDateString([],{dateStyle:"medium"})}</time><h3>{e.summary}</h3><p>{e.raw_text}</p>{e.encouragement&&<blockquote>{e.encouragement}</blockquote>}</article>) : <div className="card empty">This Bubble is ready for its first real update. 🫧</div>}
+    </section>
+  </section>
 }
 
 function Mini({icon,label,value}){return <article className="mini card"><span>{icon}</span><small>{label}</small><b>{value}</b></article>}
