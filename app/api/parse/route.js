@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 const categories = ["body","mind","relationships","money","work","fun","growth","creativity","life"];
 const DATA_KEYS = [
   "calories","protein_g","water_oz","miles","steps","squats","strength_reps",
-  "workout_minutes","sleep_hours","sleep_quality","weight_lb","fruit_veg",
+  "workout_minutes","strength_minutes","cardio_minutes","mobility_minutes",
+  "sleep_hours","sleep_quality","weight_lb","fruit_veg",
   "spending","flights","growth_points","mood","relationship_event","work_stress"
 ];
 
@@ -55,7 +56,8 @@ export async function POST(req){
           calories:{type:["number","null"]},protein_g:{type:["number","null"]},water_oz:{type:["number","null"]},
           miles:{type:["number","null"]},steps:{type:["number","null"]},squats:{type:["number","null"]},
           strength_reps:{type:["number","null"]},workout_minutes:{type:["number","null"]},
-          sleep_hours:{type:["number","null"]},sleep_quality:{type:["number","null"]},weight_lb:{type:["number","null"]},
+          strength_minutes:{type:["number","null"]},cardio_minutes:{type:["number","null"]},
+          mobility_minutes:{type:["number","null"]},sleep_hours:{type:["number","null"]},sleep_quality:{type:["number","null"]},weight_lb:{type:["number","null"]},
           fruit_veg:{type:["number","null"]},spending:{type:["number","null"]},flights:{type:["number","null"]},
           growth_points:{type:["number","null"]},mood:{type:["string","null"]},
           relationship_event:{type:["string","null"]},work_stress:{type:["number","null"]},

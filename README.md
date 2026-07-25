@@ -41,20 +41,22 @@ Add later when API credits work:
 - Each Bubble has a motivational written overview, relevant stats, direct update box, and recent history.
 - Avatar is larger, round-profile style, animated on hover, and cycles motivational messages when clicked.
 
-## V2.2 update
-- Restores the original avatar from the earlier Bubble build.
-- Removes the separate Stats tab.
-- Moves the full level, avatar, XP, stats, and lifetime overview onto the Home page.
-- Keeps Bubbles and History as their own tabs.
+## V2.5 update
+- Home uses a two-column desktop layout: stats on the left, check-in and today's totals on the right.
+- Restores today's totals and calculates the day using America/Chicago (Arkansas Central Time).
+- Adds a live Arkansas Central date and clock.
+- Uses Baloo 2 for whimsical headers and Nunito for body text.
+- Keeps clickable stat source breakdowns.
+- Replaces the previous avatar with a new polished Bubble mascot.
 
-## V2.3 update
-- Every overall stat is clickable.
-- Each stat opens a source breakdown showing the exact history entries and activities that contributed.
-- Shows the base score, raw logged progress, and displayed score.
-- Keeps the original cute avatar restored in V2.2.
-- Home and Stats remain combined.
-
-## V2.4 hotfix
-- Repairs the Home page JSX syntax error that caused Vercel build failure.
-- Verified the merged Home + stats layout remains intact.
-- Keeps the original avatar and clickable stat breakdowns.
+## V2.6 scoring audit
+- Every overall stat now starts at 0.
+- Home scores and clickable source breakdowns use the same shared calculation function, so they cannot drift apart.
+- Strength no longer receives points from generic workout minutes or walking.
+- Squats are no longer double-counted as both squats and strength reps.
+- Agility uses only miles, steps, flights, or explicitly timed cardio/movement.
+- Health uses only documented protein thresholds, produce servings, and hydration thresholds.
+- Sleep never loses points; it rises from recorded sleep and documented sleep quality.
+- Creativity no longer increases from generic fun entries.
+- Existing built-in seed records are replaced with corrected records while preserving entries the user added.
+- Entries with exercise types but no documented counts or duration remain visible in History but do not create invented stat points.
