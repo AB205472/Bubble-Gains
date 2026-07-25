@@ -40,3 +40,16 @@ Add later when API credits work:
 - Every Bubble card is clickable.
 - Each Bubble has a motivational written overview, relevant stats, direct update box, and recent history.
 - Avatar is larger, round-profile style, animated on hover, and cycles motivational messages when clicked.
+
+## V2.2 update
+- Restores the original avatar from the earlier Bubble build.
+- Removes the separate Stats tab.
+- Moves the full level, avatar, XP, stats, and lifetime overview onto the Home page.
+- Keeps Bubbles and History as their own tabs.
+
+## V2.3 update
+- Every overall stat is clickable.
+- Each stat opens a source breakdown showing the exact history entries and activities that contributed.
+- Shows the base score, raw logged progress, and displayed score.
+- Keeps the original cute avatar restored in V2.2.
+- Home and Stats remain combined.
