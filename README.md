@@ -53,3 +53,8 @@ Add later when API credits work:
 - Shows the base score, raw logged progress, and displayed score.
 - Keeps the original cute avatar restored in V2.2.
 - Home and Stats remain combined.
+
+## V2.4 hotfix
+- Repairs the Home page JSX syntax error that caused Vercel build failure.
+- Verified the merged Home + stats layout remains intact.
+- Keeps the original avatar and clickable stat breakdowns.

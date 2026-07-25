@@ -261,39 +261,37 @@ export default function Home() {
             <h2>What happened today?</h2>
             <p>Food, workouts, sleep, feelings, money, work, relationships—talk normally. One update can move several stats.</p>
           </div>
-          <textarea value={text} onChange={e=>setT
-      <section className="game-top card">
-          <div className="avatar-stage interactive-avatar" onClick={()=>setAvatarMood((avatarMood+1)%avatarMessages.length)}>
-            <div className="avatar-halo"></div>
-            <img src="/alli-avatar.svg" alt="Alli avatar"/>
-            <div className="speech">{avatarMessages[avatarMood]}</div>
-            <div className="avatar-actions"><span>✨</span><span>🫧</span><span>💗</span></div>
+          <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="I slept about 5 hours, had green tea, walked a mile, did 100 squats, and emotionally... girl."/>
+          <div className="send-row">
+            <small>Mistakes are data. You never have to perform for Bubble.</small>
+            <button className="primary" onClick={()=>submitLog()} disabled={!text.trim()||loading}>{loading?"Thinking...":"Add update ✨"}</button>
           </div>
-          <div className="level-panel">
-            <p className="soft">CURRENT CLASS</p>
-            <h2>Level {game.level}</h2>
-            <h3>{game.level<3?"Brave Bubble":game.level<6?"Strong Bubble":"Unstoppable Bubble"}</h3>
-            <div className="xp-label"><span>XP</span><b>{game.levelXP} / 100</b></div>
-            <div className="bar"><i style={{width:`${game.levelXP}%`}}/></div>
-            <small>{game.nextLevelXP} XP to next level</small>
-          </div>
+          {notice && <div className="notice">{notice}</div>}
         </section>
 
-        <section className="stat-grid">
-          <Stat name="Strength" icon="💪" value={game.stats.strength} desc="squats + resistance + workouts" onClick={()=>setActiveStat("strength")}/>
-          <Stat name="Agility" icon="🪽" value={game.stats.agility} desc="walking + stairs + movement" onClick={()=>setActiveStat("agility")}/>
-          <Stat name="Health" icon="🍓" value={game.stats.health} desc="fuel + hydration + consistency" onClick={()=>setActiveStat("health")}/>
-          <Stat name="Sleep" icon="🌙" value={game.stats.sleep} desc="hours + sleep quality" onClick={()=>setActiveStat("sleep")}/>
-          <Stat name="Resilience" icon="🛡️" value={game.stats.resilience} desc="showing up through hard things" onClick={()=>setActiveStat("resilience")}/>
-          <Stat name="Wisdom" icon="🔮" value={game.stats.wisdom} desc="reflection + pattern recognition" onClick={()=>setActiveStat("wisdom")}/>
-          <Stat name="Social" icon="💞" value={game.stats.social} desc="connection + honest boundaries" onClick={()=>setActiveStat("social")}/>
-          <Stat name="Creativity" icon="🎨" value={game.stats.creativity} desc="art + play + self-expression" onClick={()=>setActiveStat("creativity")}/>
-          <Stat name="Finance" icon="🪙" value={game.stats.finance} desc="money awareness + planning" onClick={()=>setActiveStat("finance")}/>
+        <section className="daily-title"><h3>Today's totals</h3><span>{today.entries} check-in{today.entries===1?"":"s"}</span></section>
+        <section className="today-grid">
+          <Mini icon="🔥" label="Calories" value={today.calories?`~${fmt(today.calories)}`:"—"}/>
+          <Mini icon="🥚" label="Protein" value={today.protein?`${fmt(today.protein)}g`:"—"}/>
+          <Mini icon="🚶‍♀️" label="Miles walked" value={today.miles?fmt(today.miles,2):"—"}/>
+          <Mini icon="💪" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
+          <Mini icon="💧" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
+          <Mini icon="🌙" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
         </section>
 
-        <section className="lifetime card">
-          <h3>Lifetime adventure totals</h3>
-          <div><span><b>{fmt(game.totals.miles,2)}</b><small>miles</small></span><span><b>{fmt(game.totals.squats)}</b><small>squats</small></span><span><b>{fmt(game.totals.workoutMinutes)}</b><small>workout min</small></span><span><b>{fmt(game.totals.checkins)}</b><small>memories</small></span></div>
+        <section className="checkin card">
+          <div className="section-head"><div><p className="soft">STAT CHECK</p><h3>Bubble is missing a few things</h3></div><span className="pulse">?</span></div>
+          {checkQuestions.length ? checkQuestions.map(q=><button key={q} onClick={()=>answerQuestion(q)}>{q}<span>Answer →</span></button>) :
+          <p className="complete">Everything important is updated for today. Tiny victory. ✨</p>}
+        </section>
+
+        <section className="quests card">
+          <div className="section-head"><div><p className="soft">DAILY QUESTS</p><h3>Today's little missions</h3></div><span>🎀</span></div>
+          <Quest done={today.miles>=1} label="Walk at least one mile" reward="+8 agility XP"/>
+          <Quest done={today.squats>=60} label="Complete 60 squats" reward="+8 strength XP"/>
+          <Quest done={today.protein>=80} label="Reach 80g protein" reward="+6 health XP"/>
+          <Quest done={today.water>=64} label="Drink 64 oz water" reward="+6 health XP"/>
+          <Quest done={today.sleep>=7} label="Log 7+ hours of sleep" reward="+8 sleep XP"/>
         </section>
       </>}
 
