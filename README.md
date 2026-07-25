@@ -1,40 +1,36 @@
-# Bubble V1 🫧
+# Bubble V2 — Game Update 🫧
 
-**Live your life. Bubble organizes it.**
+This update includes:
 
-This first usable build includes natural-language logging, AI calorie/protein estimates, workout extraction, automatic Bubble categories, daily totals, Supabase history, questions about history, and an installable mobile layout.
+- Alli's chibi Bubble avatar
+- Current profile: age 25, 5'4", weight left editable
+- A private starter history from July 2026 covering fitness, body image, work, sleep, Justin, Nat, and personal growth
+- Miles walked on the home page
+- Recent Bubbles removed
+- Strength, Agility, Health, Sleep, Resilience, Wisdom, Social, Creativity, and Finance stats
+- XP and levels that rise from real check-ins
+- Daily quests
+- Missing-stat questions so Bubble prompts for sleep, water, mood, movement, and protein
+- OpenAI remains optional until credits are added
 
-## 1. Upload to GitHub
+## Upload
 
-Unzip this download. On GitHub's upload page, drag **everything inside the Bubble-V1 folder** onto the page, then commit the files.
+Upload everything inside this folder to the root of the existing GitHub repository and commit.
 
-## 2. Add the Bubble table in Supabase
+GitHub will trigger a new Vercel deployment automatically. If it does not, use Vercel → Deployments → newest deployment → Redeploy.
 
-Open your Bubble Gains project → **SQL Editor** → **New query**. Paste all of `supabase.sql` and click **Run**.
+## Important privacy note
 
-This adds a `bubbles` table. It does not delete `daily_logs` or `user_progress`.
+The included personal starter history is stored in the browser's local storage, not automatically inserted into Supabase. This keeps private relationship and life history off the publicly writable test database.
 
-## 3. Add Vercel environment variables
+Do not publicly share the Vercel URL until authentication is added.
 
-Open Vercel → Bubble-Gains → **Settings** → **Environment Variables** and add:
+## Existing environment variables
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `OPENAI_API_KEY`
-- Optional: `OPENAI_MODEL` = `gpt-5-mini`
+Keep:
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-Use the Supabase **Project URL** and **publishable key**. Never use the Supabase secret/service-role key in a public variable.
-
-Redeploy after saving the variables.
-
-## 4. Test it
-
-Paste this into Bubble:
-
-> green tea, most of a pork sandwich, two cookies, walked a mile and did 100 squats. today was kind of weird but I still showed up.
-
-Bubble should summarize it, estimate food, extract squats, categorize it, encourage you, and save it.
-
-## V1 privacy note
-
-The included database policies are intentionally simple for one-user testing. Do not share the live URL publicly yet. Authentication can be added after the mechanics feel right.
+Add later when API credits work:
+- OPENAI_API_KEY
+- OPENAI_MODEL = gpt-5-mini

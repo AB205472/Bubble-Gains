@@ -1,4 +1,77 @@
-import {NextResponse} from 'next/server';
-const schema={type:'object',additionalProperties:false,properties:{summary:{type:'string'},encouragement:{type:'string'},categories:{type:'array',items:{type:'string',enum:['body','mind','relationships','money','work','fun','growth','life']}},data:{type:'object',additionalProperties:false,properties:{calories:{type:['number','null']},protein_g:{type:['number','null']},water_oz:{type:['number','null']},squats:{type:['number','null']},steps:{type:['number','null']},workout_minutes:{type:['number','null']},spending:{type:['number','null']},mood:{type:['string','null']},foods:{type:'array',items:{type:'string'}},exercises:{type:'array',items:{type:'string'}},people:{type:'array',items:{type:'string'}},notes:{type:'array',items:{type:'string'}}},required:['calories','protein_g','water_oz','squats','steps','workout_minutes','spending','mood','foods','exercises','people','notes']}},required:['summary','encouragement','categories','data']};
-function fallback(t){const l=t.toLowerCase(),grab=w=>{const m=l.match(new RegExp('(\\d[\\d,]*)\\s*(?:weighted\\s+)?'+w));return m?Number(m[1].replaceAll(',','')):null},c=[];if(/eat|ate|food|coffee|tea|calor|protein|walk|squat|workout|gym|water/.test(l))c.push('body');if(/feel|sad|happy|stress|anxious|rough|mood/.test(l))c.push('mind');if(/spent|bought|paid|\$/.test(l))c.push('money');if(/work|boss|payroll|job/.test(l))c.push('work');if(!c.length)c.push('life');return{summary:t.length>90?t.slice(0,87)+'...':t,encouragement:'You checked in. That counts. 🫧',categories:c,data:{calories:null,protein_g:null,water_oz:null,squats:grab('squats?'),steps:grab('steps?'),workout_minutes:null,spending:null,mood:null,foods:[],exercises:[],people:[],notes:[t]}}}
-export async function POST(req){try{const b=await req.json(),key=process.env.OPENAI_API_KEY;if(!key)return NextResponse.json(b.mode==='query'?{answer:'Add your OPENAI_API_KEY in Vercel to ask questions across your history.'}:fallback(b.text||''));const model=process.env.OPENAI_MODEL||'gpt-5-mini';if(b.mode==='query'){const history=(b.history||[]).map(e=>({date:e.created_at,text:e.raw_text,summary:e.summary,categories:e.categories,data:e.data}));const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions:"You are Bubble, Alli's warm, practical personal history assistant. Answer only from supplied history. Be honest when records are incomplete. Keep it kind and concise.",input:`QUESTION:\n${b.text}\n\nHISTORY:\n${JSON.stringify(history)}`})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||'OpenAI request failed.');return NextResponse.json({answer:j.output_text||'I could not find that in your saved history.'})}const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model,instructions:"You are Bubble, a warm personal life organizer for Alli. Interpret casual typo-filled rambling. Estimate food calories and protein with a sensible midpoint and never imply exactness. Extract explicit exercise counts without inventing them. One entry may belong to several categories. Encouragement must be specific, nonjudgmental, and at most two sentences. Use null for unknown numbers.",input:b.text||'',text:{format:{type:'json_schema',name:'bubble_log',strict:true,schema}}})});const j=await r.json();if(!r.ok)throw new Error(j.error?.message||'OpenAI request failed.');return NextResponse.json(JSON.parse(j.output_text))}catch(e){return NextResponse.json({error:e.message||'Unexpected error.'},{status:500})}}
+import { NextResponse } from "next/server";
+
+const categories = ["body","mind","relationships","money","work","fun","growth","creativity","life"];
+const DATA_KEYS = [
+  "calories","protein_g","water_oz","miles","steps","squats","strength_reps",
+  "workout_minutes","sleep_hours","sleep_quality","weight_lb","fruit_veg",
+  "spending","flights","growth_points","mood","relationship_event","work_stress"
+];
+
+function fallback(text) {
+  const lower=text.toLowerCase();
+  const number=(pattern)=>{const m=lower.match(pattern);return m?Number(m[1]):null};
+  const cats=[];
+  if(/eat|ate|food|tea|coffee|calor|protein|walk|mile|squat|gym|sleep|water|weight/.test(lower))cats.push("body");
+  if(/feel|sad|happy|hurt|grief|stress|proud|confident|mind/.test(lower))cats.push("mind");
+  if(/justin|steve|nat|friend|relationship|family/.test(lower))cats.push("relationships");
+  if(/work|boss|payroll|job|accounting/.test(lower))cats.push("work");
+  if(/spent|bought|paid|\$/.test(lower))cats.push("money");
+  if(!cats.length)cats.push("life");
+  const data={};
+  DATA_KEYS.forEach(k=>data[k]=null);
+  data.foods=[];data.exercises=[];data.people=[];data.notes=[text];
+  data.squats=number(/(\d+)\s+(?:weighted\s+)?squats?/);
+  data.miles=number(/(\d+(?:\.\d+)?)\s+miles?/);
+  data.sleep_hours=number(/(?:slept|sleep)\s+(?:about\s+)?(\d+(?:\.\d+)?)\s+hours?/);
+  data.weight_lb=number(/(?:weight|weigh)\D{0,10}(\d{2,3}(?:\.\d+)?)/);
+  return {summary:text.length>100?text.slice(0,97)+"...":text,encouragement:"You checked in. That counts. 🫧",categories:[...new Set(cats)],data,follow_up_questions:[]};
+}
+
+export async function POST(req){
+  try{
+    const body=await req.json();
+    const key=process.env.OPENAI_API_KEY;
+    if(!key){
+      if(body.mode==="query") return NextResponse.json({answer:"Your history is saved, but history questions will wake up after API credits are added."});
+      return NextResponse.json(fallback(body.text||""));
+    }
+    const model=process.env.OPENAI_MODEL||"gpt-5-mini";
+    if(body.mode==="query"){
+      const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({
+        model,
+        instructions:"You are Bubble, Alli's warm personal history companion. Answer only from the provided history. Make uncertainty explicit. Be compassionate but direct. Do not diagnose. Keep answers under 250 words.",
+        input:`PROFILE:\n${JSON.stringify(body.profile)}\nQUESTION:\n${body.text}\nHISTORY:\n${JSON.stringify(body.history)}`
+      })});
+      const j=await r.json(); if(!r.ok) throw new Error(j.error?.message||"OpenAI request failed");
+      return NextResponse.json({answer:j.output_text});
+    }
+
+    const schema={
+      type:"object",additionalProperties:false,
+      properties:{
+        summary:{type:"string"},encouragement:{type:"string"},
+        categories:{type:"array",items:{type:"string",enum:categories}},
+        data:{type:"object",additionalProperties:false,properties:{
+          calories:{type:["number","null"]},protein_g:{type:["number","null"]},water_oz:{type:["number","null"]},
+          miles:{type:["number","null"]},steps:{type:["number","null"]},squats:{type:["number","null"]},
+          strength_reps:{type:["number","null"]},workout_minutes:{type:["number","null"]},
+          sleep_hours:{type:["number","null"]},sleep_quality:{type:["number","null"]},weight_lb:{type:["number","null"]},
+          fruit_veg:{type:["number","null"]},spending:{type:["number","null"]},flights:{type:["number","null"]},
+          growth_points:{type:["number","null"]},mood:{type:["string","null"]},
+          relationship_event:{type:["string","null"]},work_stress:{type:["number","null"]},
+          foods:{type:"array",items:{type:"string"}},exercises:{type:"array",items:{type:"string"}},
+          people:{type:"array",items:{type:"string"}},notes:{type:"array",items:{type:"string"}}
+        },required:[...DATA_KEYS,"foods","exercises","people","notes"]},
+        follow_up_questions:{type:"array",items:{type:"string"}}
+      },required:["summary","encouragement","categories","data","follow_up_questions"]
+    };
+    const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({
+      model,
+      instructions:`You are Bubble, Alli's personal life-game engine. Parse casual language with typos. Estimate food calories and protein honestly. Extract explicit workouts, miles, sleep, water, weight, mood, spending, people, and life events. A single update may affect many categories. strength_reps should approximate total resistance or bodyweight reps explicitly stated, without double-counting squats. sleep_quality is 1-5 only when stated or strongly clear. growth_points should be 0-10 for meaningful reflection, courage, boundary-setting, or body-image progress. encouragement must be specific, warm, and under two sentences. follow_up_questions should contain at most two truly useful missing questions, not an interrogation. Never diagnose.`,
+      input:body.text||"",
+      text:{format:{type:"json_schema",name:"bubble_update",strict:true,schema}}
+    })});
+    const j=await r.json();if(!r.ok)throw new Error(j.error?.message||"OpenAI request failed");
+    return NextResponse.json(JSON.parse(j.output_text));
+  }catch(e){return NextResponse.json({error:e.message||"Unexpected error"},{status:500})}
+}
