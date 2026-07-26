@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseBrowserClient } from "../lib/supabase";
 import { PROFILE, SEED_ENTRIES } from "../lib/seed";
 import { calculateGame, todayTotals, missingCheckInQuestions, BUBBLE_TIME_ZONE, getStatContribution } from "../lib/game";
 
@@ -56,13 +56,38 @@ function BubbleIcon({name,size=24,className=""}){
   </svg>;
 }
 
-function supabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && key ? createClient(url, key) : null;
+function fromCloudMemory(row) {
+  const raw = row.raw_entry || {};
+  return {
+    id: row.id,
+    created_at: row.created_at,
+    raw_text: raw.raw_text || row.story || "",
+    summary: raw.summary || row.title || row.story || "Memory",
+    encouragement: raw.encouragement || row.encouragement || "",
+    categories: raw.categories || row.categories || ["life"],
+    data: raw.data || row.stat_awards || {}
+  };
+}
+
+function toCloudMemory(record, userId) {
+  return {
+    id: record.id,
+    user_id: userId,
+    happened_on: new Date(record.created_at).toISOString().slice(0,10),
+    title: record.summary || record.raw_text || "Memory",
+    story: record.raw_text || record.summary || "",
+    encouragement: record.encouragement || "",
+    categories: record.categories || ["life"],
+    people: record.data?.people || [],
+    stat_awards: record.data || {},
+    raw_entry: record,
+    source: record.is_seed || String(record.id || "").startsWith("seed-") ? "starter-history" : "chat",
+    is_private: true
+  };
 }
 function normalizeSeed(e, i) {
-  return { id: `seed-${i}`, summary:"", encouragement:"", categories:["life"], data:{}, ...e };
+  const seedId = `00000000-0000-4000-8000-${String(i + 1).padStart(12,"0")}`;
+  return { id: seedId, is_seed:true, summary:"", encouragement:"", categories:["life"], data:{}, ...e };
 }
 function save(entries) {
   localStorage.setItem(STORE, JSON.stringify(entries));
@@ -140,26 +165,58 @@ export default function Home() {
   const [selectedMemory,setSelectedMemory] = useState(null);
   const [memoryFolder,setMemoryFolder] = useState("all");
   const [centralNow,setCentralNow] = useState(new Date());
-  const supabase = useMemo(()=>supabaseClient(),[]);
+  const [session,setSession] = useState(undefined);
+  const [authMessage,setAuthMessage] = useState("");
+  const [syncing,setSyncing] = useState(true);
+  const supabase = useMemo(()=>getSupabaseBrowserClient(),[]);
 
   useEffect(()=>{
     const openMemory = event => setSelectedMemory(event.detail);
     window.addEventListener("open-bubble-memory", openMemory);
     const timer = setInterval(()=>setCentralNow(new Date()), 1000);
-    const existing = JSON.parse(localStorage.getItem(STORE) || "[]");
-    if (!localStorage.getItem(SEEDED)) {
-      const personalEntries = existing.filter(entry => !String(entry.id || "").startsWith("seed-"));
-      const seeded = [...SEED_ENTRIES.map(normalizeSeed), ...personalEntries]
-        .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-      save(seeded);
-      localStorage.setItem(SEEDED,"1");
-      setEntries(seeded);
-    } else setEntries(existing);
+
+    async function loadForSession(nextSession) {
+      setSession(nextSession);
+      if (!nextSession?.user || !supabase) { setSyncing(false); return; }
+      setSyncing(true);
+      await supabase.from("profiles").upsert({user_id:nextSession.user.id,display_name:"Alli",timezone:BUBBLE_TIME_ZONE},{onConflict:"user_id"});
+      await supabase.from("app_settings").upsert({user_id:nextSession.user.id},{onConflict:"user_id"});
+
+      const {data:cloudRows,error} = await supabase.from("memories").select("*").order("created_at",{ascending:false});
+      if (error) {
+        setAuthMessage("Bubble connected, but the memory sync needs attention: " + error.message);
+        setSyncing(false);
+        return;
+      }
+
+      if ((cloudRows || []).length) {
+        const cloudEntries=(cloudRows || []).map(fromCloudMemory);
+        setEntries(cloudEntries); save(cloudEntries);
+      } else {
+        const existing = JSON.parse(localStorage.getItem(STORE) || "[]");
+        const personalEntries = existing.filter(entry => !String(entry.id || "").startsWith("seed-"));
+        const seeded = [...SEED_ENTRIES.map(normalizeSeed), ...personalEntries]
+          .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+        if (seeded.length) {
+          const payload=seeded.map(record=>toCloudMemory(record,nextSession.user.id));
+          const {error:seedError}=await supabase.from("memories").upsert(payload,{onConflict:"id"});
+          if (seedError) setAuthMessage("Signed in, but starter history did not finish syncing: " + seedError.message);
+          else setAuthMessage("Signed in. Your private Bubble history is now in the cloud. 🫧");
+        }
+        save(seeded); localStorage.setItem(SEEDED,"1"); setEntries(seeded);
+      }
+      setSyncing(false);
+    }
+
+    if (!supabase) { setSession(null); setSyncing(false); }
+    supabase?.auth.getSession().then(({data})=>loadForSession(data.session));
+    const {data:listener}=supabase?.auth.onAuthStateChange((_event,nextSession)=>loadForSession(nextSession)) || {data:null};
     return ()=>{
       clearInterval(timer);
       window.removeEventListener("open-bubble-memory", openMemory);
+      listener?.subscription?.unsubscribe();
     };
-  },[]);
+  },[supabase]);
 
   const game = useMemo(()=>calculateGame(entries),[entries]);
   const today = useMemo(()=>todayTotals(entries),[entries]);
@@ -195,10 +252,10 @@ export default function Home() {
       };
       const next=[record,...entries];
       setEntries(next); save(next); setText(""); setBubbleText("");
-      if (supabase) {
-        const { error } = await supabase.from("bubbles").insert(record);
-        if (error) setNotice("Saved privately on this device. Cloud sync needs attention.");
-        else setNotice("Saved. Your stats just moved. ✨");
+      if (supabase && session?.user) {
+        const { error } = await supabase.from("memories").insert(toCloudMemory(record,session.user.id));
+        if (error) setNotice("Saved on this device, but cloud sync needs attention: " + error.message);
+        else setNotice("Saved privately to Bubble. Your stats just moved. ✨");
       } else setNotice("Saved privately on this device. ✨");
     } catch(err) { setNotice(err.message); }
     finally { setLoading(false); }
@@ -228,8 +285,18 @@ export default function Home() {
     setProfileOpen(false);
   }
 
-  function deleteEntry(id) {
+  async function deleteEntry(id) {
     const next=entries.filter(e=>e.id!==id); setEntries(next); save(next);
+    if (supabase && session?.user) {
+      const {error}=await supabase.from("memories").delete().eq("id",id);
+      if (error) setNotice("Removed on this device, but cloud deletion needs attention: " + error.message);
+    }
+  }
+
+  async function signOut(){
+    await supabase?.auth.signOut();
+    setEntries([]);
+    setAuthMessage("");
   }
 
   function openBubble(key){
@@ -237,6 +304,9 @@ export default function Home() {
     setTab("bubble-detail");
     window.scrollTo({top:0,behavior:"smooth"});
   }
+
+  if (session === undefined || syncing) return <AuthShell><div className="auth-card card"><p className="soft">PRIVATE BUBBLE</p><h2>Loading your world…</h2><p>Pulling your memories safely from Supabase.</p></div></AuthShell>;
+  if (!session) return <LoginScreen supabase={supabase} message={authMessage} setMessage={setAuthMessage}/>;
 
   return (
     <main className="shell">
@@ -246,12 +316,13 @@ export default function Home() {
           <h1>Bubble <span><BubbleIcon name="bubble" size={30}/></span></h1>
           <p>Live your life. Bubble organizes it.</p>
         </div>
-        <button className="level-chip" onClick={()=>setTab("home")}>
+<div className="header-actions"><button className="level-chip" onClick={()=>setTab("home")}>
           <span>🫧</span>
           <div><b>Level {game.level}</b><small>{game.level<3?"Brave Bubble":game.level<6?"Strong Bubble":"Unstoppable Bubble"}</small></div>
-        </button>
+        </button><button className="signout-button" onClick={signOut}>Sign out</button></div>
       </header>
 
+      {authMessage && <div className="notice cloud-notice">{authMessage}</div>}
       <nav className="nav">
         {["home","bubbles","memories","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}
       </nav>
@@ -671,4 +742,29 @@ function StatDetail({statKey,value,entries,onClose}){
           <div className="source-why"><b>Why this mattered:</b><p>{explainContribution(statKey,r)}</p></div>
           <div className="source-evidence"><b>What Bubble noticed:</b><p>{r.reasons.join(" · ")}</p></div></article>):<p>No entries have contributed yet.</p>}</div>
   </section></div>
+}
+
+
+function AuthShell({children}){
+  return <main className="auth-shell"><div className="auth-brand"><span className="tiny">ALLI'S LIFE LEARNING BUBBLE</span><h1>Bubble 🫧</h1><p>Your private little world, saved safely.</p></div>{children}</main>;
+}
+
+function LoginScreen({supabase,message,setMessage}){
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [busy,setBusy]=useState(false);
+  async function login(e){
+    e.preventDefault(); setBusy(true); setMessage("");
+    if(!supabase){ setMessage("Supabase environment variables are missing in Vercel."); setBusy(false); return; }
+    const {error}=await supabase.auth.signInWithPassword({email,password});
+    if(error) setMessage(error.message);
+    setBusy(false);
+  }
+  return <AuthShell><form className="auth-card card" onSubmit={login}>
+    <p className="soft">WELCOME HOME</p><h2>Sign into Bubble</h2><p>Use the email and password you created in Supabase.</p>
+    <label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label>
+    <label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="current-password"/></label>
+    <button className="primary" disabled={busy}>{busy?"Opening Bubble…":"Sign in 🫧"}</button>
+    {message&&<div className="notice">{message}</div>}
+  </form></AuthShell>;
 }
