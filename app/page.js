@@ -97,6 +97,20 @@ function fmt(v, digits=0) {
 }
 function n(v){ return Number.isFinite(Number(v)) ? Number(v) : 0; }
 
+
+function relationshipWithHealthSnapshot(entries) {
+  const bodyEntries = entries.filter(e => (e.categories || []).includes("body"));
+  const recent = bodyEntries.slice(0, 30);
+  const flags = recent.map(e => e.data || {});
+  const peaceful = flags.filter(d => d.moderation || d.food_peace_score >= 7 || d.all_or_nothing_pattern_interrupted).length;
+  const guilt = flags.filter(d => d.food_guilt || d.guilt_language_noted).length;
+  const restriction = flags.filter(d => d.restriction || d.skipped_food_intentionally).length;
+  const overeating = flags.filter(d => d.overeating || d.binge).length;
+  const scores = flags.map(d => Number(d.food_peace_score)).filter(Number.isFinite);
+  const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : null;
+  return { peaceful, guilt, restriction, overeating, avg, count: recent.length };
+}
+
 function filteredEntries(entries, key) {
   return entries.filter(e => (e.categories || []).includes(key));
 }
@@ -222,6 +236,7 @@ export default function Home() {
   const today = useMemo(()=>todayTotals(entries),[entries]);
   const checkQuestions = useMemo(()=>missingCheckInQuestions(entries,game.stats),[entries,game.stats]);
   const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
+  const healthRelationship = useMemo(()=>relationshipWithHealthSnapshot(entries),[entries]);
   const centralDate = new Intl.DateTimeFormat("en-US", {
     timeZone:BUBBLE_TIME_ZONE, weekday:"long", month:"long", day:"numeric", year:"numeric"
   }).format(centralNow);
@@ -399,6 +414,31 @@ export default function Home() {
               <Mini icon="strength" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
               <Mini icon="health" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
               <Mini icon="sleep" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
+            </section>
+
+            <section className="health-split card">
+              <div className="section-head"><div><p className="soft">TWO DIFFERENT STORIES</p><h3>Health & your relationship with health</h3></div><span><BubbleIcon name="health" size={26}/></span></div>
+              <div className="health-split-grid">
+                <div className="health-panel physical-health">
+                  <h4>Physical Health</h4>
+                  <p>What happened in your body today—sleep, food, water, movement, strength and energy.</p>
+                  <div className="health-panel-stats">
+                    <span><b>{today.sleep?`${fmt(today.sleep,1)} hr`:"—"}</b><small>sleep</small></span>
+                    <span><b>{today.water?`${fmt(today.water)} oz`:"—"}</b><small>water</small></span>
+                    <span><b>{today.squats?fmt(today.squats):"—"}</b><small>squats</small></span>
+                  </div>
+                </div>
+                <div className="health-panel relationship-health">
+                  <h4>Relationship With Health</h4>
+                  <p>How peaceful, flexible and compassionate eating and movement felt—not whether the day was “good” or “bad.”</p>
+                  <div className="health-panel-stats">
+                    <span><b>{healthRelationship.avg!=null?`${fmt(healthRelationship.avg,1)}/10`:"—"}</b><small>food peace</small></span>
+                    <span><b>{healthRelationship.peaceful}</b><small>moderation wins</small></span>
+                    <span><b>{healthRelationship.count}</b><small>recent logs</small></span>
+                  </div>
+                  <small className="health-note">A pizza day can be peaceful. A “perfect” food day can still feel anxious. Bubble tracks both honestly.</small>
+                </div>
+              </div>
             </section>
 
             <section className="checkin card">
