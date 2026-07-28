@@ -304,20 +304,3 @@ body{
 /* Bubble V3.1: private Supabase login + cloud sync */
 .header-actions{display:flex;align-items:center;gap:9px}.signout-button{border:1px solid var(--line);background:rgba(255,255,255,.7);color:var(--muted);border-radius:14px;padding:10px 12px;font-weight:900}.cloud-notice{margin:14px 0}.auth-shell{min-height:100vh;width:min(620px,calc(100% - 28px));margin:auto;display:grid;align-content:center;gap:24px;padding:32px 0}.auth-brand{text-align:center}.auth-brand h1{font-family:"Cherry Bomb One","Nunito",sans-serif;font-size:clamp(3rem,12vw,5.5rem);margin:4px 0}.auth-brand p{color:var(--muted);margin:0}.auth-card{padding:clamp(24px,6vw,42px)}.auth-card h2{font-size:clamp(2rem,7vw,3rem);margin:0 0 8px}.auth-card>p:not(.soft){color:var(--muted);line-height:1.5}.auth-card label{display:grid;gap:6px;font-weight:900;margin:14px 0}.auth-card input{width:100%;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.8);padding:14px;outline:none;color:var(--ink)}.auth-card input:focus{border-color:#b79cda;box-shadow:0 0 0 4px rgba(183,156,218,.15)}.auth-card .primary{width:100%;margin-top:8px;padding:14px}.auth-card .notice{margin-top:14px}
 @media(max-width:650px){.header{align-items:flex-start}.header-actions{flex-direction:column;align-items:stretch}.signout-button{font-size:.75rem}.level-chip>span:nth-child(2){display:none}}
-
-
-/* Bubble V3.3: separate physical health from relationship with health */
-.health-split{padding:22px;background:linear-gradient(145deg,#fff,#fff8fb 50%,#f4f1ff)}
-.health-split-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-.health-panel{padding:18px;border-radius:22px;border:1px solid rgba(140,110,170,.14);position:relative;overflow:hidden}
-.health-panel:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-32px;top:-36px;background:rgba(255,255,255,.58)}
-.physical-health{background:linear-gradient(145deg,#eef9ff,#fff)}
-.relationship-health{background:linear-gradient(145deg,#fff1f7,#f6f1ff)}
-.health-panel h4{margin:0 0 8px;font-family:"Cherry Bomb One","Nunito",sans-serif;font-size:1.45rem;font-weight:400}
-.health-panel p{margin:0;color:var(--muted);line-height:1.5;font-size:.9rem}
-.health-panel-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}
-.health-panel-stats span{padding:10px;border-radius:14px;background:rgba(255,255,255,.72);text-align:center}
-.health-panel-stats b,.health-panel-stats small{display:block}
-.health-panel-stats b{font-size:1rem}.health-panel-stats small{font-size:.7rem;color:var(--muted);margin-top:2px}
-.health-note{display:block;margin-top:12px;color:#7d6a80;line-height:1.4}
-@media(max-width:700px){.health-split-grid{grid-template-columns:1fr}}

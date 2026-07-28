@@ -85,6 +85,49 @@ function toCloudMemory(record, userId) {
     is_private: true
   };
 }
+
+function fromBubbleDay(row) {
+  const health = row.health || {};
+  const relHealth = row.relationship_with_health || {};
+  const sectionText = Object.values(row.sections || {})
+    .map(section => section?.story)
+    .filter(Boolean)
+    .join("\n\n");
+  const categories = [];
+  const tags = (row.tags || []).map(tag => String(tag).toLowerCase());
+  if (tags.some(tag => tag.includes("health"))) categories.push("body");
+  if (tags.some(tag => tag.includes("relationship"))) categories.push("relationships");
+  if (tags.some(tag => tag.includes("growth") || tag.includes("boundary") || tag.includes("recovery") || tag.includes("values"))) categories.push("growth");
+  if (!categories.length) categories.push("life");
+  return {
+    id: `day-${row.id}`,
+    cloud_day_id: row.id,
+    source_type: "bubble_day",
+    created_at: `${row.entry_date}T12:00:00-05:00`,
+    raw_text: sectionText || row.summary || row.title,
+    summary: row.title || row.summary || "Daily Story",
+    encouragement: row.is_pivotal ? "Pivotal Day 🫧" : row.status === "final" ? "Daily Story finalized. 🫧" : "Daily Story in progress.",
+    categories: [...new Set(categories)],
+    data: {
+      sleep_hours: health.sleep_hours ?? null,
+      water_oz: health.water_oz ?? (health.water_bottles ? Number(health.water_bottles) * 16.9 : null),
+      miles: health.miles_walked ?? null,
+      squats: health.squats ?? null,
+      foods: health.foods || [],
+      people: row.people || [],
+      lessons: row.lessons || [],
+      patterns_noticed: row.sections?.pattern_insight?.story ? [row.sections.pattern_insight.story] : [],
+      boundaries: row.tags?.some(tag => String(tag).toLowerCase().includes("boundar")) ? ["Protected a personal boundary."] : [],
+      milestones: row.is_pivotal ? [row.title || "Pivotal Day"] : [],
+      relationship_with_health: relHealth,
+      stat_gains: row.stat_gains || {},
+      wins: row.wins || [],
+      status: row.status,
+      entry_date: row.entry_date
+    }
+  };
+}
+
 function normalizeSeed(e, i) {
   const seedId = `00000000-0000-4000-8000-${String(i + 1).padStart(12,"0")}`;
   return { id: seedId, is_seed:true, summary:"", encouragement:"", categories:["life"], data:{}, ...e };
@@ -96,20 +139,6 @@ function fmt(v, digits=0) {
   return Number(v || 0).toLocaleString(undefined,{maximumFractionDigits:digits});
 }
 function n(v){ return Number.isFinite(Number(v)) ? Number(v) : 0; }
-
-
-function relationshipWithHealthSnapshot(entries) {
-  const bodyEntries = entries.filter(e => (e.categories || []).includes("body"));
-  const recent = bodyEntries.slice(0, 30);
-  const flags = recent.map(e => e.data || {});
-  const peaceful = flags.filter(d => d.moderation || d.food_peace_score >= 7 || d.all_or_nothing_pattern_interrupted).length;
-  const guilt = flags.filter(d => d.food_guilt || d.guilt_language_noted).length;
-  const restriction = flags.filter(d => d.restriction || d.skipped_food_intentionally).length;
-  const overeating = flags.filter(d => d.overeating || d.binge).length;
-  const scores = flags.map(d => Number(d.food_peace_score)).filter(Number.isFinite);
-  const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : null;
-  return { peaceful, guilt, restriction, overeating, avg, count: recent.length };
-}
 
 function filteredEntries(entries, key) {
   return entries.filter(e => (e.categories || []).includes(key));
@@ -196,15 +225,21 @@ export default function Home() {
       await supabase.from("profiles").upsert({user_id:nextSession.user.id,display_name:"Alli",timezone:BUBBLE_TIME_ZONE},{onConflict:"user_id"});
       await supabase.from("app_settings").upsert({user_id:nextSession.user.id},{onConflict:"user_id"});
 
-      const {data:cloudRows,error} = await supabase.from("memories").select("*").order("created_at",{ascending:false});
-      if (error) {
-        setAuthMessage("Bubble connected, but the memory sync needs attention: " + error.message);
+      const [{data:cloudRows,error},{data:dayRows,error:dayError}] = await Promise.all([
+        supabase.from("memories").select("*").order("created_at",{ascending:false}),
+        supabase.from("bubble_days").select("*").order("entry_date",{ascending:false})
+      ]);
+      if (error || dayError) {
+        setAuthMessage("Bubble connected, but the cloud sync needs attention: " + (error?.message || dayError?.message));
         setSyncing(false);
         return;
       }
 
-      if ((cloudRows || []).length) {
-        const cloudEntries=(cloudRows || []).map(fromCloudMemory);
+      if ((cloudRows || []).length || (dayRows || []).length) {
+        const cloudEntries=[
+          ...(dayRows || []).map(fromBubbleDay),
+          ...(cloudRows || []).map(fromCloudMemory)
+        ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
         setEntries(cloudEntries); save(cloudEntries);
       } else {
         const existing = JSON.parse(localStorage.getItem(STORE) || "[]");
@@ -236,7 +271,6 @@ export default function Home() {
   const today = useMemo(()=>todayTotals(entries),[entries]);
   const checkQuestions = useMemo(()=>missingCheckInQuestions(entries,game.stats),[entries,game.stats]);
   const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
-  const healthRelationship = useMemo(()=>relationshipWithHealthSnapshot(entries),[entries]);
   const centralDate = new Intl.DateTimeFormat("en-US", {
     timeZone:BUBBLE_TIME_ZONE, weekday:"long", month:"long", day:"numeric", year:"numeric"
   }).format(centralNow);
@@ -303,7 +337,11 @@ export default function Home() {
   async function deleteEntry(id) {
     const next=entries.filter(e=>e.id!==id); setEntries(next); save(next);
     if (supabase && session?.user) {
-      const {error}=await supabase.from("memories").delete().eq("id",id);
+      const entry = entries.find(e => e.id === id);
+      const query = entry?.source_type === "bubble_day"
+        ? supabase.from("bubble_days").delete().eq("id", entry.cloud_day_id)
+        : supabase.from("memories").delete().eq("id",id);
+      const {error}=await query;
       if (error) setNotice("Removed on this device, but cloud deletion needs attention: " + error.message);
     }
   }
@@ -414,31 +452,6 @@ export default function Home() {
               <Mini icon="strength" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
               <Mini icon="health" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
               <Mini icon="sleep" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
-            </section>
-
-            <section className="health-split card">
-              <div className="section-head"><div><p className="soft">TWO DIFFERENT STORIES</p><h3>Health & your relationship with health</h3></div><span><BubbleIcon name="health" size={26}/></span></div>
-              <div className="health-split-grid">
-                <div className="health-panel physical-health">
-                  <h4>Physical Health</h4>
-                  <p>What happened in your body today—sleep, food, water, movement, strength and energy.</p>
-                  <div className="health-panel-stats">
-                    <span><b>{today.sleep?`${fmt(today.sleep,1)} hr`:"—"}</b><small>sleep</small></span>
-                    <span><b>{today.water?`${fmt(today.water)} oz`:"—"}</b><small>water</small></span>
-                    <span><b>{today.squats?fmt(today.squats):"—"}</b><small>squats</small></span>
-                  </div>
-                </div>
-                <div className="health-panel relationship-health">
-                  <h4>Relationship With Health</h4>
-                  <p>How peaceful, flexible and compassionate eating and movement felt—not whether the day was “good” or “bad.”</p>
-                  <div className="health-panel-stats">
-                    <span><b>{healthRelationship.avg!=null?`${fmt(healthRelationship.avg,1)}/10`:"—"}</b><small>food peace</small></span>
-                    <span><b>{healthRelationship.peaceful}</b><small>moderation wins</small></span>
-                    <span><b>{healthRelationship.count}</b><small>recent logs</small></span>
-                  </div>
-                  <small className="health-note">A pizza day can be peaceful. A “perfect” food day can still feel anxious. Bubble tracks both honestly.</small>
-                </div>
-              </div>
             </section>
 
             <section className="checkin card">
