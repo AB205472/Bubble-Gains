@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const categories = ["body","mind","relationships","money","work","fun","growth","creativity","life"];
 const DATA_KEYS = [
-  "calories","protein_g","water_oz","miles","steps","squats","strength_reps",
+  "calories","protein_g","carbs_g","fat_g","added_sugar_g","caffeine_mg","nutrition_confidence","water_oz","miles","steps","squats","strength_reps",
   "workout_minutes","strength_minutes","cardio_minutes","mobility_minutes",
   "sleep_hours","sleep_quality","weight_lb","fruit_veg",
   "spending","flights","growth_points","mood","relationship_event","work_stress"
@@ -59,7 +59,7 @@ export async function POST(req){
         summary:{type:"string"},encouragement:{type:"string"},
         categories:{type:"array",items:{type:"string",enum:categories}},
         data:{type:"object",additionalProperties:false,properties:{
-          calories:{type:["number","null"]},protein_g:{type:["number","null"]},water_oz:{type:["number","null"]},
+          calories:{type:["number","null"]},protein_g:{type:["number","null"]},carbs_g:{type:["number","null"]},fat_g:{type:["number","null"]},added_sugar_g:{type:["number","null"]},caffeine_mg:{type:["number","null"]},nutrition_confidence:{type:["string","null"],enum:["high","medium","low",null]},water_oz:{type:["number","null"]},
           miles:{type:["number","null"]},steps:{type:["number","null"]},squats:{type:["number","null"]},
           strength_reps:{type:["number","null"]},workout_minutes:{type:["number","null"]},
           strength_minutes:{type:["number","null"]},cardio_minutes:{type:["number","null"]},
@@ -80,7 +80,7 @@ export async function POST(req){
     };
     const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify({
       model,
-      instructions:`You are Bubble, Alli's personal life-game engine. Parse casual language with typos. Estimate food calories and protein honestly. Extract explicit workouts, miles, sleep, water, weight, mood, spending, people, and life events. A single update may affect many categories. strength_reps should approximate total resistance or bodyweight reps explicitly stated, without double-counting squats. sleep_quality is 1-5 only when stated or strongly clear. growth_points is retained for compatibility but should normally be null. Wisdom must come only from lessons, facts_learned, or patterns_noticed. A lesson is a transferable takeaway the user explicitly learned. A fact is concrete information learned. A pattern is a repeated relationship, behavior, sleep, emotional, work, or body pattern the user explicitly noticed. Do not label ordinary feelings, workouts, meals, or events as wisdom. Resilience must come only from coping_actions, boundaries, or recovery_actions that the user actually took. Creativity must come only from creative_actions. Finance must come only from money_actions or spending. Milestones should be rare, meaningful firsts or identity shifts—not routine logs. encouragement must be specific, warm, and under two sentences. follow_up_questions should contain at most two truly useful missing questions, not an interrogation. Never diagnose.`,
+      instructions:`You are Bubble, Alli's personal life-game engine. Parse casual language with typos. Estimate food calories, protein, carbohydrates, fat, added sugar, caffeine, and produce servings honestly. Use nutrition_confidence=high only for a clear nutrition label, exact branded item, or official restaurant item; medium for a reasonably described homemade meal or portion; low for vague portions. Add all foods named to foods. Do not pretend estimates are exact. Extract explicit workouts, miles, sleep, water, weight, mood, spending, people, and life events. A single update may affect many categories. strength_reps should approximate total resistance or bodyweight reps explicitly stated, without double-counting squats. sleep_quality is 1-5 only when stated or strongly clear. growth_points is retained for compatibility but should normally be null. Wisdom must come only from lessons, facts_learned, or patterns_noticed. A lesson is a transferable takeaway the user explicitly learned. A fact is concrete information learned. A pattern is a repeated relationship, behavior, sleep, emotional, work, or body pattern the user explicitly noticed. Do not label ordinary feelings, workouts, meals, or events as wisdom. Resilience must come only from coping_actions, boundaries, or recovery_actions that the user actually took. Creativity must come only from creative_actions. Finance must come only from money_actions or spending. Milestones should be rare, meaningful firsts or identity shifts—not routine logs. encouragement must be specific, warm, and under two sentences. follow_up_questions should contain at most two truly useful missing questions, not an interrogation. Never diagnose.`,
       input:body.text||"",
       text:{format:{type:"json_schema",name:"bubble_update",strict:true,schema}}
     })});

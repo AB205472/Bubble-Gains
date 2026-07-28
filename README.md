@@ -33,3 +33,8 @@ Optional for smarter natural-language parsing and history questions:
 - `OPENAI_MODEL=gpt-5-mini`
 
 Without an OpenAI key, regular check-ins still save using Bubble's built-in basic parser.
+
+
+## V4 nutrition intelligence
+
+Bubble now estimates calories, protein, carbs, fat, produce, caffeine, and added sugar from normal food updates. Nutrition values include a confidence level. The home dashboard shows an estimated calorie status and lets the user confirm deficit, maintenance, or surplus. Daily nutrition summaries are stored on the dated `bubble_days` record.

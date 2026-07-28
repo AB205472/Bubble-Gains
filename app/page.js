@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "../lib/supabase";
 import { PROFILE, SEED_ENTRIES } from "../lib/seed";
-import { calculateGame, todayTotals, missingCheckInQuestions, BUBBLE_TIME_ZONE, getStatContribution } from "../lib/game";
+import { calculateGame, todayTotals, missingCheckInQuestions, BUBBLE_TIME_ZONE, centralDateKey, getStatContribution } from "../lib/game";
 
 const STORE = "bubble_v2_entries";
 const SEEDED = "bubble_v26_seeded";
@@ -114,6 +114,15 @@ function fromBubbleDay(row) {
       miles: health.miles_walked ?? null,
       squats: health.squats ?? null,
       foods: health.foods || [],
+      calories: row.nutrition?.calories ?? health.calories ?? null,
+      protein_g: row.nutrition?.protein_g ?? health.protein_g ?? null,
+      carbs_g: row.nutrition?.carbs_g ?? null,
+      fat_g: row.nutrition?.fat_g ?? null,
+      added_sugar_g: row.nutrition?.added_sugar_g ?? null,
+      caffeine_mg: row.nutrition?.caffeine_mg ?? null,
+      fruit_veg: row.nutrition?.fruit_veg ?? null,
+      nutrition_confidence: row.nutrition?.confidence ?? null,
+      calorie_status: row.calorie_status || row.nutrition?.calorie_status || null,
       people: row.people || [],
       lessons: row.lessons || [],
       patterns_noticed: row.sections?.pattern_insight?.story ? [row.sections.pattern_insight.story] : [],
@@ -192,6 +201,21 @@ function bubbleSnapshot(entries, key) {
   return { relevant, totals, recent, latest, people, mood, summary:summaries[key] };
 }
 
+function confidenceLabel(values = []) {
+  if (!values.length) return "Not estimated yet";
+  if (values.includes("low")) return "Low confidence";
+  if (values.includes("medium")) return "Medium confidence";
+  return "High confidence";
+}
+
+function estimatedCalorieStatus(calories) {
+  if (!calories) return "unknown";
+  const maintenance = Number(PROFILE.estimatedMaintenanceCalories || 2000);
+  if (calories < maintenance - 100) return "deficit";
+  if (calories > maintenance + 100) return "surplus";
+  return "maintenance";
+}
+
 export default function Home() {
   const [tab,setTab] = useState("home");
   const [activeBubble,setActiveBubble] = useState("body");
@@ -211,6 +235,7 @@ export default function Home() {
   const [session,setSession] = useState(undefined);
   const [authMessage,setAuthMessage] = useState("");
   const [syncing,setSyncing] = useState(true);
+  const [savingNutritionStatus,setSavingNutritionStatus] = useState(false);
   const supabase = useMemo(()=>getSupabaseBrowserClient(),[]);
 
   useEffect(()=>{
@@ -269,6 +294,9 @@ export default function Home() {
 
   const game = useMemo(()=>calculateGame(entries),[entries]);
   const today = useMemo(()=>todayTotals(entries),[entries]);
+  const autoCalorieStatus = useMemo(()=>estimatedCalorieStatus(today.calories),[today.calories]);
+  const displayedCalorieStatus = today.calorieStatus || autoCalorieStatus;
+  const estimatedDeficit = today.calories ? Math.round(Number(PROFILE.estimatedMaintenanceCalories || 2000) - today.calories) : null;
   const checkQuestions = useMemo(()=>missingCheckInQuestions(entries,game.stats),[entries,game.stats]);
   const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
   const centralDate = new Intl.DateTimeFormat("en-US", {
@@ -308,6 +336,66 @@ export default function Home() {
       } else setNotice("Saved privately on this device. ✨");
     } catch(err) { setNotice(err.message); }
     finally { setLoading(false); }
+  }
+
+  async function saveCalorieStatus(status) {
+    if (!supabase || !session?.user || savingNutritionStatus) return;
+    setSavingNutritionStatus(true);
+    setNotice("");
+    try {
+      const entryDate = centralDateKey();
+      const { data: existing, error: readError } = await supabase
+        .from("bubble_days")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("entry_date", entryDate)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      const nutrition = {
+        ...(existing?.nutrition || {}),
+        calories: today.calories || null,
+        protein_g: today.protein || null,
+        carbs_g: today.carbs || null,
+        fat_g: today.fat || null,
+        added_sugar_g: today.addedSugar || null,
+        caffeine_mg: today.caffeine || null,
+        fruit_veg: today.produce || null,
+        confidence: confidenceLabel(today.nutritionConfidence).split(" ")[0].toLowerCase(),
+        calorie_status: status,
+        maintenance_estimate: PROFILE.estimatedMaintenanceCalories || 2000,
+        status_source: "user"
+      };
+      const payload = {
+        ...(existing || {}),
+        user_id: session.user.id,
+        entry_date: entryDate,
+        title: existing?.title || "Daily Story",
+        summary: existing?.summary || "",
+        calorie_status: status,
+        nutrition,
+        updated_at: new Date().toISOString()
+      };
+      delete payload.id;
+      delete payload.created_at;
+
+      const { data: saved, error } = await supabase
+        .from("bubble_days")
+        .upsert(payload,{onConflict:"user_id,entry_date"})
+        .select("*")
+        .single();
+      if (error) throw error;
+
+      const updatedDay = fromBubbleDay(saved);
+      const withoutDay = entries.filter(entry => !(entry.source_type === "bubble_day" && entry.data?.entry_date === entryDate));
+      const next = [updatedDay, ...withoutDay].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+      setEntries(next); save(next);
+      setNotice(`Calorie status saved as ${status}. 🫧`);
+    } catch (error) {
+      setNotice("Bubble could not save that calorie status: " + error.message);
+    } finally {
+      setSavingNutritionStatus(false);
+    }
   }
 
   async function askHistory() {
@@ -448,10 +536,38 @@ export default function Home() {
             <section className="today-grid">
               <Mini icon="health" label="Calories" value={today.calories?`~${fmt(today.calories)}`:"—"}/>
               <Mini icon="health" label="Protein" value={today.protein?`${fmt(today.protein)}g`:"—"}/>
+              <Mini icon="health" label="Carbs" value={today.carbs?`${fmt(today.carbs)}g`:"—"}/>
+              <Mini icon="health" label="Fat" value={today.fat?`${fmt(today.fat)}g`:"—"}/>
               <Mini icon="agility" label="Miles walked" value={today.miles?fmt(today.miles,2):"—"}/>
               <Mini icon="strength" label="Squats" value={today.squats?fmt(today.squats):"—"}/>
               <Mini icon="health" label="Water" value={today.water?`${fmt(today.water)} oz`:"—"}/>
               <Mini icon="sleep" label="Sleep" value={today.sleep?`${fmt(today.sleep,1)} hr`:"—"}/>
+            </section>
+
+            <section className="nutrition-intelligence card">
+              <div className="section-head">
+                <div><p className="soft">FOOD INTELLIGENCE</p><h3>Today’s nutrition snapshot</h3></div>
+                <span className={`nutrition-confidence ${confidenceLabel(today.nutritionConfidence).split(" ")[0].toLowerCase()}`}>{confidenceLabel(today.nutritionConfidence)}</span>
+              </div>
+              <div className="nutrition-metrics">
+                <span><b>{today.protein ? `${fmt(today.protein)}g` : "—"}</b><small>protein / {PROFILE.proteinGoalGrams}g goal</small></span>
+                <span><b>{today.produce ? fmt(today.produce,1) : "—"}</b><small>produce servings</small></span>
+                <span><b>{today.caffeine ? `${fmt(today.caffeine)}mg` : "—"}</b><small>caffeine</small></span>
+                <span><b>{today.addedSugar ? `${fmt(today.addedSugar)}g` : "—"}</b><small>added sugar</small></span>
+              </div>
+              <div className="calorie-status-row">
+                <div>
+                  <h4>Calorie status</h4>
+                  <p>{today.calories ? `Based on ~${fmt(today.calories)} calories and an estimated ${fmt(PROFILE.estimatedMaintenanceCalories)}-calorie maintenance level.` : "Log food and Bubble will estimate this automatically."}</p>
+                  {estimatedDeficit !== null && <small>{estimatedDeficit > 0 ? `Estimated ${fmt(estimatedDeficit)} calorie deficit` : estimatedDeficit < 0 ? `Estimated ${fmt(Math.abs(estimatedDeficit))} calorie surplus` : "Near estimated maintenance"}</small>}
+                </div>
+                <div className="status-options" role="group" aria-label="Daily calorie status">
+                  {["deficit","maintenance","surplus"].map(status=><button key={status} className={displayedCalorieStatus===status?"selected":""} onClick={()=>saveCalorieStatus(status)} disabled={savingNutritionStatus}>
+                    <span>{displayedCalorieStatus===status?"☑":"☐"}</span>{status[0].toUpperCase()+status.slice(1)}
+                  </button>)}
+                </div>
+              </div>
+              <p className="nutrition-note">Estimates are guidance, not exact measurements. Labels and exact brand details raise confidence automatically.</p>
             </section>
 
             <section className="checkin card">
