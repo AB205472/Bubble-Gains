@@ -114,13 +114,15 @@ function fromBubbleDay(row) {
       miles: health.miles_walked ?? null,
       squats: health.squats ?? null,
       foods: health.foods || [],
-      calories: row.nutrition?.calories ?? health.calories ?? null,
-      protein_g: row.nutrition?.protein_g ?? health.protein_g ?? null,
-      carbs_g: row.nutrition?.carbs_g ?? null,
-      fat_g: row.nutrition?.fat_g ?? null,
-      added_sugar_g: row.nutrition?.added_sugar_g ?? null,
-      caffeine_mg: row.nutrition?.caffeine_mg ?? null,
-      fruit_veg: row.nutrition?.fruit_veg ?? null,
+      calories: row.nutrition?.estimated_calories ?? row.nutrition?.calories ?? health.calories ?? null,
+      protein_g: row.nutrition?.estimated_protein_g ?? row.nutrition?.protein_g ?? health.protein_g ?? null,
+      carbs_g: row.nutrition?.estimated_carbs_g ?? row.nutrition?.carbs_g ?? null,
+      fat_g: row.nutrition?.estimated_fat_g ?? row.nutrition?.fat_g ?? null,
+      added_sugar_g: row.nutrition?.estimated_added_sugar_g ?? row.nutrition?.added_sugar_g ?? null,
+      caffeine_mg: row.nutrition?.estimated_caffeine_mg ?? row.nutrition?.caffeine_mg ?? null,
+      fruit_veg: row.nutrition?.estimated_produce_servings ?? row.nutrition?.fruit_veg ?? null,
+      maintenance_calories: row.nutrition?.maintenance_estimate_calories ?? row.nutrition?.maintenance_estimate ?? null,
+      estimated_deficit_calories: row.nutrition?.estimated_deficit_calories ?? null,
       nutrition_confidence: row.nutrition?.confidence ?? null,
       calorie_status: row.calorie_status || row.nutrition?.calorie_status || null,
       people: row.people || [],
@@ -296,7 +298,8 @@ export default function Home() {
   const today = useMemo(()=>todayTotals(entries),[entries]);
   const autoCalorieStatus = useMemo(()=>estimatedCalorieStatus(today.calories),[today.calories]);
   const displayedCalorieStatus = today.calorieStatus || autoCalorieStatus;
-  const estimatedDeficit = today.calories ? Math.round(Number(PROFILE.estimatedMaintenanceCalories || 2000) - today.calories) : null;
+  const dailyMaintenance = today.maintenanceCalories || Number(PROFILE.estimatedMaintenanceCalories || 2000);
+  const estimatedDeficit = today.estimatedDeficitCalories ?? (today.calories ? Math.round(dailyMaintenance - today.calories) : null);
   const checkQuestions = useMemo(()=>missingCheckInQuestions(entries,game.stats),[entries,game.stats]);
   const activeSnapshot = useMemo(()=>bubbleSnapshot(entries,activeBubble),[entries,activeBubble]);
   const centralDate = new Intl.DateTimeFormat("en-US", {
@@ -532,7 +535,7 @@ export default function Home() {
               {notice && <div className="notice">{notice}</div>}
             </section>
 
-            <section className="daily-title"><h3>Today's totals</h3><span>{today.entries} Central-time check-in{today.entries===1?"":"s"}</span></section>
+            <section className="daily-title"><h3>Today's totals</h3><span>{today.hasDailySummary ? `${today.dailyStatus === "final" ? "Finalized" : "Draft"} daily summary` : `${today.entries} Central-time check-in${today.entries===1?"":"s"}`}</span></section>
             <section className="today-grid">
               <Mini icon="health" label="Calories" value={today.calories?`~${fmt(today.calories)}`:"—"}/>
               <Mini icon="health" label="Protein" value={today.protein?`${fmt(today.protein)}g`:"—"}/>
@@ -558,7 +561,7 @@ export default function Home() {
               <div className="calorie-status-row">
                 <div>
                   <h4>Calorie status</h4>
-                  <p>{today.calories ? `Based on ~${fmt(today.calories)} calories and an estimated ${fmt(PROFILE.estimatedMaintenanceCalories)}-calorie maintenance level.` : "Log food and Bubble will estimate this automatically."}</p>
+                  <p>{today.calories ? `Based on ~${fmt(today.calories)} calories and an estimated ${fmt(dailyMaintenance)}-calorie maintenance level.` : "Log food and Bubble will estimate this automatically."}</p>
                   {estimatedDeficit !== null && <small>{estimatedDeficit > 0 ? `Estimated ${fmt(estimatedDeficit)} calorie deficit` : estimatedDeficit < 0 ? `Estimated ${fmt(Math.abs(estimatedDeficit))} calorie surplus` : "Near estimated maintenance"}</small>}
                 </div>
                 <div className="status-options" role="group" aria-label="Daily calorie status">
