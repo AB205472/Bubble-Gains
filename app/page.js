@@ -219,7 +219,7 @@ function estimatedCalorieStatus(calories) {
 }
 
 export default function Home() {
-  const [tab,setTab] = useState("home");
+  const [tab,setTab] = useState("chat");
   const [activeBubble,setActiveBubble] = useState("body");
   const [entries,setEntries] = useState([]);
   const [text,setText] = useState("");
@@ -238,6 +238,12 @@ export default function Home() {
   const [authMessage,setAuthMessage] = useState("");
   const [syncing,setSyncing] = useState(true);
   const [savingNutritionStatus,setSavingNutritionStatus] = useState(false);
+  const [chatDay,setChatDay] = useState(null);
+  const [chatMessages,setChatMessages] = useState([]);
+  const [chatText,setChatText] = useState("");
+  const [chatSending,setChatSending] = useState(false);
+  const [chatArchive,setChatArchive] = useState([]);
+  const [chatDateKey,setChatDateKey] = useState(centralDateKey());
   const supabase = useMemo(()=>getSupabaseBrowserClient(),[]);
 
   useEffect(()=>{
@@ -252,15 +258,31 @@ export default function Home() {
       await supabase.from("profiles").upsert({user_id:nextSession.user.id,display_name:"Alli",timezone:BUBBLE_TIME_ZONE},{onConflict:"user_id"});
       await supabase.from("app_settings").upsert({user_id:nextSession.user.id},{onConflict:"user_id"});
 
-      const [{data:cloudRows,error},{data:dayRows,error:dayError}] = await Promise.all([
+      const entryDate = centralDateKey();
+      await supabase.from("bubble_chat_days")
+        .update({status:"archived",updated_at:new Date().toISOString()})
+        .eq("user_id",nextSession.user.id)
+        .lt("entry_date",entryDate)
+        .eq("status","open");
+      const {data:currentChat,error:chatDayError} = await supabase.from("bubble_chat_days")
+        .upsert({user_id:nextSession.user.id,entry_date:entryDate,status:"open",title:"Today with Bubble",updated_at:new Date().toISOString()},{onConflict:"user_id,entry_date"})
+        .select("*").single();
+      const [{data:cloudRows,error},{data:dayRows,error:dayError},{data:messageRows,error:messageError},{data:archiveRows,error:archiveError}] = await Promise.all([
         supabase.from("memories").select("*").order("created_at",{ascending:false}),
-        supabase.from("bubble_days").select("*").order("entry_date",{ascending:false})
+        supabase.from("bubble_days").select("*").order("entry_date",{ascending:false}),
+        currentChat ? supabase.from("bubble_chat_messages").select("*").eq("chat_day_id",currentChat.id).order("created_at",{ascending:true}) : Promise.resolve({data:[],error:null}),
+        supabase.from("bubble_chat_days").select("*").order("entry_date",{ascending:false}).limit(60)
       ]);
-      if (error || dayError) {
-        setAuthMessage("Bubble connected, but the cloud sync needs attention: " + (error?.message || dayError?.message));
+      if (error || dayError || chatDayError || messageError || archiveError) {
+        setAuthMessage("Bubble connected, but the cloud sync needs attention: " + (error?.message || dayError?.message || chatDayError?.message || messageError?.message || archiveError?.message));
         setSyncing(false);
         return;
       }
+
+      setChatDay(currentChat || null);
+      setChatMessages(messageRows || []);
+      setChatArchive(archiveRows || []);
+      setChatDateKey(entryDate);
 
       if ((cloudRows || []).length || (dayRows || []).length) {
         const cloudEntries=[
@@ -293,6 +315,14 @@ export default function Home() {
       listener?.subscription?.unsubscribe();
     };
   },[supabase]);
+
+  useEffect(()=>{
+    const nextKey = centralDateKey(centralNow);
+    if (nextKey !== chatDateKey && session?.user) {
+      setChatDateKey(nextKey);
+      window.location.reload();
+    }
+  },[centralNow,chatDateKey,session]);
 
   const game = useMemo(()=>calculateGame(entries),[entries]);
   const today = useMemo(()=>todayTotals(entries),[entries]);
@@ -339,6 +369,55 @@ export default function Home() {
       } else setNotice("Saved privately on this device. ✨");
     } catch(err) { setNotice(err.message); }
     finally { setLoading(false); }
+  }
+
+  async function sendChat() {
+    const content = chatText.trim();
+    if (!content || chatSending || !supabase || !session?.user || !chatDay) return;
+    setChatSending(true); setNotice(""); setChatText("");
+    const optimistic = {id:crypto.randomUUID(),role:"user",content,created_at:new Date().toISOString()};
+    setChatMessages(prev=>[...prev,optimistic]);
+    try {
+      const {data:userMessage,error:userError} = await supabase.from("bubble_chat_messages").insert({
+        chat_day_id:chatDay.id,user_id:session.user.id,entry_date:chatDateKey,role:"user",content
+      }).select("*").single();
+      if(userError) throw userError;
+      setChatMessages(prev=>prev.map(message=>message.id===optimistic.id?userMessage:message));
+
+      const memoryContext = entries.slice(0,120).map(entry=>({
+        date:entry.data?.entry_date || entry.created_at?.slice(0,10),
+        summary:entry.summary,
+        text:entry.raw_text,
+        categories:entry.categories,
+        people:entry.data?.people || [],
+        lessons:entry.data?.lessons || [],
+        patterns:entry.data?.patterns_noticed || []
+      }));
+      const response = await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        text:content,entryDate:chatDateKey,profile:PROFILE,memories:memoryContext,
+        todayMessages:[...chatMessages,{role:"user",content}].map(message=>({role:message.role,content:message.content}))
+      })});
+      const parsed = await response.json();
+      if(!response.ok) throw new Error(parsed.error || "Bubble could not answer.");
+
+      const {data:assistantMessage,error:assistantError} = await supabase.from("bubble_chat_messages").insert({
+        chat_day_id:chatDay.id,user_id:session.user.id,entry_date:chatDateKey,role:"assistant",content:parsed.reply,
+        metadata:{logged:parsed.should_log,categories:parsed.categories || []}
+      }).select("*").single();
+      if(assistantError) throw assistantError;
+      setChatMessages(prev=>[...prev,assistantMessage]);
+
+      if(parsed.should_log){
+        const record={id:crypto.randomUUID(),created_at:new Date().toISOString(),raw_text:content,summary:parsed.summary || content,encouragement:parsed.encouragement || "",categories:parsed.categories || ["life"],data:parsed.data || {}};
+        const {error:memoryError}=await supabase.from("memories").insert(toCloudMemory(record,session.user.id));
+        if(memoryError) throw memoryError;
+        const next=[record,...entries]; setEntries(next); save(next);
+      }
+      await supabase.from("bubble_chat_days").update({updated_at:new Date().toISOString()}).eq("id",chatDay.id);
+    } catch(error) {
+      setNotice("Bubble chat needs attention: " + error.message);
+      setChatText(content);
+    } finally { setChatSending(false); }
   }
 
   async function saveCalorieStatus(status) {
@@ -468,8 +547,22 @@ export default function Home() {
 
       {authMessage && <div className="notice cloud-notice">{authMessage}</div>}
       <nav className="nav">
-        {["home","bubbles","memories","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}
+        {["chat","home","bubbles","memories","history"].map(x=><button key={x} className={(tab===x || (x==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(x)}>{x[0].toUpperCase()+x.slice(1)}</button>)}
       </nav>
+
+      {tab==="chat" && <DailyBubbleChat
+        messages={chatMessages}
+        text={chatText}
+        setText={setChatText}
+        send={sendChat}
+        sending={chatSending}
+        notice={notice}
+        dateLabel={centralDate}
+        timeLabel={centralTime}
+        archive={chatArchive}
+        today={today}
+        openHome={()=>setTab("home")}
+      />}
 
       {tab==="home" && <>
         <section className="home-overview card clean-overview">
@@ -661,6 +754,48 @@ export default function Home() {
       <footer>Built with 🫧, stubbornness, and an entirely reasonable number of “ew”s.</footer>
     </main>
   );
+}
+
+function DailyBubbleChat({messages,text,setText,send,sending,notice,dateLabel,timeLabel,archive,today,openHome}){
+  const handleKeyDown = event => {
+    if(event.key === "Enter" && !event.shiftKey){ event.preventDefault(); send(); }
+  };
+  return <section className="daily-chat-page">
+    <div className="chat-day-header card">
+      <div><p className="soft">TODAY WITH BUBBLE</p><h2>{dateLabel}</h2><p>{timeLabel} · Everything in this thread belongs to today.</p></div>
+      <button onClick={openHome}>View today’s stats →</button>
+    </div>
+    <div className="chat-layout">
+      <section className="chat-window card">
+        <div className="chat-messages">
+          {!messages.length && <div className="bubble-welcome">
+            <span>🫧</span><h3>Hey Alli. Fresh day, same Bubble.</h3>
+            <p>Talk to me exactly like you do in ChatGPT. I’ll answer, give advice, remember what matters, and quietly organize today’s food, movement, feelings, relationships, work, and growth.</p>
+          </div>}
+          {messages.map(message=><article key={message.id} className={`chat-message ${message.role}`}>
+            <small>{message.role === "assistant" ? "Bubble" : "You"}</small>
+            <p>{message.content}</p>
+          </article>)}
+          {sending && <article className="chat-message assistant thinking"><small>Bubble</small><p>thinking through this with you…</p></article>}
+        </div>
+        <div className="chat-composer">
+          <textarea value={text} onChange={event=>setText(event.target.value)} onKeyDown={handleKeyDown} placeholder="Tell me what’s going on… food, Justin, work, a random thought, all of it."/>
+          <div><small>Enter sends · Shift + Enter adds a line</small><button className="primary" onClick={send} disabled={!text.trim()||sending}>{sending?"Thinking…":"Send 🫧"}</button></div>
+          {notice && <div className="notice">{notice}</div>}
+        </div>
+      </section>
+      <aside className="chat-side">
+        <section className="card chat-today-card"><p className="soft">QUIETLY TRACKING TODAY</p><h3>Your live snapshot</h3>
+          <div><span><b>{today.calories?`~${fmt(today.calories)}`:"—"}</b><small>calories</small></span><span><b>{today.protein?`${fmt(today.protein)}g`:"—"}</b><small>protein</small></span><span><b>{today.water?`${fmt(today.water)} oz`:"—"}</b><small>water</small></span><span><b>{today.miles?fmt(today.miles,2):"—"}</b><small>miles</small></span></div>
+          <button onClick={openHome}>Open full dashboard</button>
+        </section>
+        <section className="card chat-archive-card"><p className="soft">DAILY ARCHIVE</p><h3>Your previous days</h3>
+          {(archive || []).filter(day=>day.status==="archived").slice(0,7).map(day=><div key={day.id}><b>{new Date(`${day.entry_date}T12:00:00`).toLocaleDateString([],{month:"long",day:"numeric"})}</b><small>Archived conversation</small></div>)}
+          {!archive?.some(day=>day.status==="archived") && <p>Your first archived day will appear here tomorrow.</p>}
+        </section>
+      </aside>
+    </div>
+  </section>;
 }
 
 function BubbleDetail({bubbleKey,bubble,snapshot,text,setText,loading,notice,submit,back}){

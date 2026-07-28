@@ -38,3 +38,15 @@ Without an OpenAI key, regular check-ins still save using Bubble's built-in basi
 ## V4 nutrition intelligence
 
 Bubble now estimates calories, protein, carbs, fat, produce, caffeine, and added sugar from normal food updates. Nutrition values include a confidence level. The home dashboard shows an estimated calorie status and lets the user confirm deficit, maintenance, or surplus. Daily nutrition summaries are stored on the dated `bubble_days` record.
+
+## Bubble V5 daily AI chat
+
+Bubble now includes one Supabase-backed conversation per Central Time calendar date. Messages are archived rather than deleted when a new day begins. The server-only `/api/chat` route uses `OPENAI_API_KEY`, today's thread, the Bubble profile, and compact long-term memories to provide advice while extracting stats from the same natural-language message.
+
+Required Vercel environment variables:
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (optional; defaults to `gpt-5-mini`)
+- existing `NEXT_PUBLIC_SUPABASE_URL`
+- existing `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Apply `supabase/migrations/20260728_add_daily_ai_chat.sql` before deploying.
