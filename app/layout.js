@@ -1,6 +1,8 @@
 import "./globals.css";
+import "./notifications.css";
 import PwaRegister from "./pwa-register";
 import BubbleVision from "./bubble-vision";
+import NotificationSettings from "./notification-settings";
 
 export const viewport = {
   themeColor: "#eee8ff",
@@ -26,5 +28,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="en"><body><PwaRegister /><BubbleVision />{children}</body></html>;
+  return <html lang="en"><body><PwaRegister /><BubbleVision /><NotificationSettings />{children}</body></html>;
 }
