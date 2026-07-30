@@ -56,7 +56,7 @@ export default function NotificationSettings(){
         const sentKey=`bubble_notice_${dateKey}_${key}`;
         if(localStorage.getItem(sentKey))continue;
         const reg=await navigator.serviceWorker?.ready;
-        if(reg)await reg.showNotification(title,{body,icon:"/bubble-ab-icon.svg",badge:"/icon-192.png",tag:`bubble-${key}`,data:{url:"/"}});
+        if(reg)await reg.showNotification(title,{body,icon:"/app-icon.png",badge:"/app-icon.png",tag:`bubble-${key}`,data:{url:"/"}});
         localStorage.setItem(sentKey,"1");
       }
     };
@@ -77,7 +77,7 @@ export default function NotificationSettings(){
     if(result==="granted"){
       await save({...settings,enabled:true});
       const reg=await navigator.serviceWorker?.ready;
-      await reg?.showNotification("Bubble notifications are on 🫧",{body:"Your cute little reminders are ready.",icon:"/bubble-ab-icon.svg",badge:"/icon-192.png",tag:"bubble-welcome",data:{url:"/"}});
+      await reg?.showNotification("Bubble notifications are on 🫧",{body:"Your cute little reminders are ready.",icon:"/app-icon.png",badge:"/app-icon.png",tag:"bubble-welcome",data:{url:"/"}});
       setMessage("Notifications are on. You should see the test alert now. ♡");
     }else setMessage("Notification permission was not granted. You can enable it in iPhone Settings for Bubble.");
   };
@@ -87,7 +87,7 @@ export default function NotificationSettings(){
     {open&&<div className="notification-backdrop" onClick={()=>setOpen(false)}>
       <section className="notification-sheet" onClick={e=>e.stopPropagation()} aria-label="Bubble notification settings">
         <div className="notification-head"><div><strong>Bubble reminders</strong><p>Your little workday nudges, exactly when you need them.</p></div><button onClick={()=>setOpen(false)} aria-label="Close">×</button></div>
-        <img className="app-icon-preview" src="/bubble-ab-icon.svg" alt="Pink AB Bubble app icon"/>
+        <img className="app-icon-preview" src="/app-icon.png" alt="Pink AB Bubble app icon"/>
         <p className="bubble-kicker">live life. bubble figures the rest out. ♡</p>
         {!installed&&<><div className="notification-note"><strong>Add Bubble to your iPhone Home Screen</strong><br/>Open this page in Safari, tap Share, choose <b>Add to Home Screen</b>, then launch Bubble from the new pink AB icon.</div><div className="install-steps"><div className="install-step"><b>1</b>Open in Safari</div><div className="install-step"><b>2</b>Share → Add to Home Screen</div><div className="install-step"><b>3</b>Open the AB icon</div></div></>}
         <button className="notification-primary" onClick={enable}>{permission==="granted"?"Send me a test notification ✨":"Turn on notifications ♡"}</button>
@@ -97,7 +97,7 @@ export default function NotificationSettings(){
         <label>Daily recap<input type="time" value={settings.recap} onChange={e=>save({...settings,recap:e.target.value})}/></label>
         <label className="notification-toggle"><input type="checkbox" checked={settings.enabled} onChange={e=>save({...settings,enabled:e.target.checked})}/> Reminders enabled</label>
         {message&&<p className="notification-message">{message}</p>}
-        <p className="notification-foot">Keep Bubble installed on your Home Screen. The notification service worker and cloud preferences are now connected; full server-sent delivery is the next backend layer.</p>
+        <p className="notification-foot">Keep Bubble installed on your Home Screen. Your reminder preferences are saved securely to your Bubble account.</p>
       </section>
     </div>}
   </>;
