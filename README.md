@@ -1,19 +1,21 @@
-# Bubble Gains V6 🫧
+# Bubble Gains V6.2 — Bubble Vision 🫧
 
 Bubble is a private, Supabase-backed daily AI companion and life-learning dashboard. Each Central Time calendar day has its own conversation. Chat messages persist throughout the day, older days are archived, meaningful updates feed memories and stats, and finalized `bubble_days` records remain the canonical daily summary.
 
-## V6 fixes and hardening
+## Bubble Vision
 
-- Fixed the production chat failure: `"undefined" is not valid JSON`.
-- Parses the raw REST response from OpenAI's Responses API instead of assuming the SDK-only `output_text` convenience property exists.
-- Supports structured JSON output, refusals, incomplete responses, malformed output, and non-JSON HTTP errors.
-- Keeps a user's message saved when the AI connection has a temporary failure and returns a non-crashing degraded response.
-- Prevents API failures from producing duplicate user messages on retry.
-- Uses a defensive frontend JSON reader for `/api/chat` and `/api/parse`.
-- Preserves Central Time daily chat grouping and automatic archival after midnight.
-- Preserves canonical `bubble_days` totals so finalized days do not double-count earlier check-ins.
-- Includes `/api/health`, which reports whether OpenAI and Supabase environment variables are configured without exposing their values.
-- Contains no avatar asset files.
+Bubble chat now supports private image input through the camera or photo library.
+
+Supported flows:
+
+- Meals and food labels
+- Receipts
+- Scale photos
+- Treadmill, watch, and workout screens
+- Progress photos without appearance judgments
+- General image understanding
+
+Images are previewed before sending, uploaded to a private Supabase Storage bucket, linked to the day's chat, analyzed through the OpenAI Responses API, and displayed as signed private image cards. Useful structured results include a one-tap **Save to Bubble** action that creates a normal Bubble memory and updates stats through the existing memory pipeline.
 
 ## Required Vercel environment variables
 
@@ -22,46 +24,32 @@ Bubble is a private, Supabase-backed daily AI companion and life-learning dashbo
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` — optional; defaults to `gpt-5-mini`
 
-After deployment, open `/api/health`. A healthy deployment returns status 200 with both services marked `configured`. The endpoint never returns secret values.
+No new environment variables are required for Bubble Vision.
 
 ## Supabase
 
-The live Bubble Gains project was checked against the code. These tables and their row-level-security policies are present:
+Bubble Vision adds:
 
-- `memories`
-- `bubble_days`
-- `bubble_chat_days`
-- `bubble_chat_messages`
-- `profiles`
-- `app_settings`
+- `bubble_attachments`
+- private `bubble-uploads` Storage bucket
+- ownership-based table and Storage RLS policies
 
-The included migrations remain in the repository for schema history. Do not re-create the tables manually.
+Migration:
 
-## Local verification
+- `supabase/migrations/20260730_add_bubble_vision_attachments.sql`
 
-```bash
-npm install
-npm test
-npm run build
-npm run dev
-```
+## Verification
 
-Then test:
+- Supabase migration applied to project `rkplselnjxvwjhlpbhpv`.
+- `bubble_attachments` verified with RLS enabled.
+- Vercel preview build completed successfully.
+- Full signed-in camera and photo-library interaction should be smoke-tested from Alli's installed Bubble PWA after production deployment.
 
-1. Sign in.
-2. Send a chat message and refresh; both sides of the conversation should remain.
-3. Send a food update; today's calories and protein should update.
-4. Open a finalized date; its nutrition values should override, not add to, individual check-ins.
-5. Visit `/api/health`.
+## Privacy
 
-## Deployment
-
-Commit the full V6 repository or apply the V6 update bundle, push to GitHub, and let Vercel deploy. Existing Supabase data is not replaced by these files.
-
-## V6.1 mobile installation update
-
-This package includes a complete web-app manifest, 192px and 512px install icons, an Apple touch icon, and a small production service worker. After the Vercel production deployment succeeds, open the site in Safari on iPhone, tap Share, and choose **Add to Home Screen**.
-
-## Verified data backfill
-
-The production Supabase project was backfilled for July 26, July 28, July 29, and the partial July 30 entry. The existing finalized July 27 entry was preserved.
+- Upload bucket is private.
+- Signed URLs are temporary.
+- File size is limited to 15 MB.
+- Only supported image MIME types are accepted.
+- Table and Storage access are restricted to the authenticated owner.
+- The OpenAI API key remains server-only.
