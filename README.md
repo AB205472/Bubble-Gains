@@ -38,26 +38,12 @@ Migration:
 
 - `supabase/migrations/20260730_add_bubble_vision_attachments.sql`
 
-## Local verification
+## Verification
 
-```bash
-npm install
-npm test
-npm run build
-npm run dev
-```
-
-Then test:
-
-1. Sign in.
-2. Open Chat.
-3. Take or choose a photo.
-4. Verify the preview before sending.
-5. Send with or without a caption.
-6. Confirm Bubble analyzes the image and the photo card appears.
-7. Tap **Save to Bubble** and verify the result appears in memories and stats.
-8. Refresh and confirm the chat and photo card persist.
-9. Visit `/api/health`.
+- Supabase migration applied to project `rkplselnjxvwjhlpbhpv`.
+- `bubble_attachments` verified with RLS enabled.
+- Vercel preview build completed successfully.
+- Full signed-in camera and photo-library interaction should be smoke-tested from Alli's installed Bubble PWA after production deployment.
 
 ## Privacy
 
