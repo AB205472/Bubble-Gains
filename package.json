@@ -1,10 +1,10 @@
 {
   "name": "bubble-gains",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/approved-ui-patch.mjs && next dev",
+    "build": "node scripts/approved-ui-patch.mjs && next build",
     "start": "next start",
     "test": "node --test tests/*.test.mjs"
   },
