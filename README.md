@@ -1,52 +1,67 @@
-# Bubble V3.1 — Private Cloud Bubble 🫧
+# Bubble Gains V6 🫧
 
-This version connects Bubble to the private Supabase database and requires the Supabase user login before showing personal information.
+Bubble is a private, Supabase-backed daily AI companion and life-learning dashboard. Each Central Time calendar day has its own conversation. Chat messages persist throughout the day, older days are archived, meaningful updates feed memories and stats, and finalized `bubble_days` records remain the canonical daily summary.
 
-## What changed
+## V6 fixes and hardening
 
-- Added a private email/password login screen.
-- Loads memories from the authenticated user's Supabase account.
-- Migrates the built-in starter history into Supabase on the first successful login.
-- Saves new check-ins to the `memories` table.
-- Deletes memories from both the screen and Supabase.
-- Keeps local storage as a temporary backup if a cloud write fails.
-- Preserves the existing Bubble design, stats, quests, memories, and history views.
-
-## Upload to GitHub
-
-1. In the Bubble-Gains repository, choose **Add file → Upload files**.
-2. Drag every file and folder from this package into the upload box.
-3. Confirm replacement of existing files when GitHub shows matching names.
-4. Commit directly to the main branch.
-5. Vercel should deploy automatically.
+- Fixed the production chat failure: `"undefined" is not valid JSON`.
+- Parses the raw REST response from OpenAI's Responses API instead of assuming the SDK-only `output_text` convenience property exists.
+- Supports structured JSON output, refusals, incomplete responses, malformed output, and non-JSON HTTP errors.
+- Keeps a user's message saved when the AI connection has a temporary failure and returns a non-crashing degraded response.
+- Prevents API failures from producing duplicate user messages on retry.
+- Uses a defensive frontend JSON reader for `/api/chat` and `/api/parse`.
+- Preserves Central Time daily chat grouping and automatic archival after midnight.
+- Preserves canonical `bubble_days` totals so finalized days do not double-count earlier check-ins.
+- Includes `/api/health`, which reports whether OpenAI and Supabase environment variables are configured without exposing their values.
+- Contains no avatar asset files.
 
 ## Required Vercel environment variables
 
-These should already exist from the earlier setup:
-
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-Optional for smarter natural-language parsing and history questions:
-
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL=gpt-5-mini`
+- `OPENAI_MODEL` — optional; defaults to `gpt-5-mini`
 
-Without an OpenAI key, regular check-ins still save using Bubble's built-in basic parser.
+After deployment, open `/api/health`. A healthy deployment returns status 200 with both services marked `configured`. The endpoint never returns secret values.
 
+## Supabase
 
-## V4 nutrition intelligence
+The live Bubble Gains project was checked against the code. These tables and their row-level-security policies are present:
 
-Bubble now estimates calories, protein, carbs, fat, produce, caffeine, and added sugar from normal food updates. Nutrition values include a confidence level. The home dashboard shows an estimated calorie status and lets the user confirm deficit, maintenance, or surplus. Daily nutrition summaries are stored on the dated `bubble_days` record.
+- `memories`
+- `bubble_days`
+- `bubble_chat_days`
+- `bubble_chat_messages`
+- `profiles`
+- `app_settings`
 
-## Bubble V5 daily AI chat
+The included migrations remain in the repository for schema history. Do not re-create the tables manually.
 
-Bubble now includes one Supabase-backed conversation per Central Time calendar date. Messages are archived rather than deleted when a new day begins. The server-only `/api/chat` route uses `OPENAI_API_KEY`, today's thread, the Bubble profile, and compact long-term memories to provide advice while extracting stats from the same natural-language message.
+## Local verification
 
-Required Vercel environment variables:
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional; defaults to `gpt-5-mini`)
-- existing `NEXT_PUBLIC_SUPABASE_URL`
-- existing `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+```bash
+npm install
+npm test
+npm run build
+npm run dev
+```
 
-Apply `supabase/migrations/20260728_add_daily_ai_chat.sql` before deploying.
+Then test:
+
+1. Sign in.
+2. Send a chat message and refresh; both sides of the conversation should remain.
+3. Send a food update; today's calories and protein should update.
+4. Open a finalized date; its nutrition values should override, not add to, individual check-ins.
+5. Visit `/api/health`.
+
+## Deployment
+
+Commit the full V6 repository or apply the V6 update bundle, push to GitHub, and let Vercel deploy. Existing Supabase data is not replaced by these files.
+
+## V6.1 mobile installation update
+
+This package includes a complete web-app manifest, 192px and 512px install icons, an Apple touch icon, and a small production service worker. After the Vercel production deployment succeeds, open the site in Safari on iPhone, tap Share, and choose **Add to Home Screen**.
+
+## Verified data backfill
+
+The production Supabase project was backfilled for July 26, July 28, July 29, and the partial July 30 entry. The existing finalized July 27 entry was preserved.

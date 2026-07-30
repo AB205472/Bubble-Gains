@@ -1,3 +1,4 @@
+import { extractResponseText, parseStructuredResponse, readJsonResponse } from "../../../lib/server/openai-response";
 import { NextResponse } from "next/server";
 
 const categories = ["body","mind","relationships","money","work","fun","growth","creativity","life"];
@@ -34,6 +35,8 @@ function fallback(text) {
   return {summary:text.length>100?text.slice(0,97)+"...":text,encouragement:"You checked in. That counts. 🫧",categories:[...new Set(cats)],data,follow_up_questions:[]};
 }
 
+export const runtime = "nodejs";
+
 export async function POST(req){
   try{
     const body=await req.json();
@@ -49,8 +52,10 @@ export async function POST(req){
         instructions:"You are Bubble, Alli's warm personal history companion. Answer only from the provided history. Make uncertainty explicit. Be compassionate but direct. Do not diagnose. Keep answers under 250 words.",
         input:`PROFILE:\n${JSON.stringify(body.profile)}\nQUESTION:\n${body.text}\nHISTORY:\n${JSON.stringify(body.history)}`
       })});
-      const j=await r.json(); if(!r.ok) throw new Error(j.error?.message||"OpenAI request failed");
-      return NextResponse.json({answer:j.output_text});
+      const j=await readJsonResponse(r); if(!r.ok) throw new Error(j.error?.message||`OpenAI request failed (${r.status})`);
+      const answer=extractResponseText(j);
+      if(!answer) throw new Error("OpenAI returned no answer.");
+      return NextResponse.json({answer});
     }
 
     const schema={
@@ -84,7 +89,7 @@ export async function POST(req){
       input:body.text||"",
       text:{format:{type:"json_schema",name:"bubble_update",strict:true,schema}}
     })});
-    const j=await r.json();if(!r.ok)throw new Error(j.error?.message||"OpenAI request failed");
-    return NextResponse.json(JSON.parse(j.output_text));
+    const j=await readJsonResponse(r);if(!r.ok)throw new Error(j.error?.message||`OpenAI request failed (${r.status})`);
+    return NextResponse.json(parseStructuredResponse(j));
   }catch(e){return NextResponse.json({error:e.message||"Unexpected error"},{status:500})}
 }

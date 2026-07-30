@@ -1,3 +1,4 @@
+import { parseStructuredResponse, readJsonResponse } from "../../../lib/server/openai-response";
 import { NextResponse } from "next/server";
 
 const categories = ["body","mind","relationships","money","work","fun","growth","creativity","life"];
@@ -40,22 +41,26 @@ const updateSchema = {
   required:["reply","should_log","summary","encouragement","categories","data"]
 };
 
-function fallback(text){
+function fallback(text, reason="temporarily unavailable"){
   return {
-    reply:"I’m here, and I saved what you said. The advice side of Bubble will wake up as soon as your OpenAI key and credits are active. 🫧",
+    reply:`I saved what you said, but I hit a ${reason} problem while trying to answer. Nothing you wrote was lost—try sending your next message normally. 🫧`,
     should_log:true,
     summary:text.slice(0,120), encouragement:"You checked in. That counts. 🫧", categories:["life"],
-    data:{calories:null,protein_g:null,carbs_g:null,fat_g:null,added_sugar_g:null,caffeine_mg:null,nutrition_confidence:null,water_oz:null,miles:null,steps:null,squats:null,strength_reps:null,workout_minutes:null,strength_minutes:null,cardio_minutes:null,mobility_minutes:null,sleep_hours:null,sleep_quality:null,weight_lb:null,fruit_veg:null,spending:null,flights:null,growth_points:null,mood:null,relationship_event:null,work_stress:null,foods:[],exercises:[],people:[],notes:[text],lessons:[],facts_learned:[],patterns_noticed:[],coping_actions:[],boundaries:[],recovery_actions:[],connection_actions:[],creative_actions:[],money_actions:[],milestones:[]}
+    data:{calories:null,protein_g:null,carbs_g:null,fat_g:null,added_sugar_g:null,caffeine_mg:null,nutrition_confidence:null,water_oz:null,miles:null,steps:null,squats:null,strength_reps:null,workout_minutes:null,strength_minutes:null,cardio_minutes:null,mobility_minutes:null,sleep_hours:null,sleep_quality:null,weight_lb:null,fruit_veg:null,spending:null,flights:null,growth_points:null,mood:null,relationship_event:null,work_stress:null,foods:[],exercises:[],people:[],notes:[text],lessons:[],facts_learned:[],patterns_noticed:[],coping_actions:[],boundaries:[],recovery_actions:[],connection_actions:[],creative_actions:[],money_actions:[],milestones:[]},
+    degraded:true
   };
 }
 
+export const runtime = "nodejs";
+
 export async function POST(req){
+  let text = "";
   try{
     const body = await req.json();
-    const text = String(body.text || "").trim();
+    text = String(body.text || "").trim();
     if(!text) return NextResponse.json({error:"Message is empty."},{status:400});
     const key = process.env.OPENAI_API_KEY;
-    if(!key) return NextResponse.json(fallback(text));
+    if(!key) return NextResponse.json(fallback(text,"configuration"));
 
     const recentChat = Array.isArray(body.todayMessages) ? body.todayMessages.slice(-24) : [];
     const memories = Array.isArray(body.memories) ? body.memories.slice(0,90) : [];
@@ -74,10 +79,12 @@ At the same time, quietly extract anything that should affect today's Bubble sta
         text:{format:{type:"json_schema",name:"bubble_chat_reply",strict:true,schema:updateSchema}}
       })
     });
-    const json = await response.json();
-    if(!response.ok) throw new Error(json.error?.message || "OpenAI request failed");
-    return NextResponse.json(JSON.parse(json.output_text));
+    const json = await readJsonResponse(response);
+    if(!response.ok) throw new Error(json.error?.message || `OpenAI request failed (${response.status})`);
+    const parsed = parseStructuredResponse(json);
+    return NextResponse.json({...parsed,degraded:false});
   }catch(error){
-    return NextResponse.json({error:error.message || "Bubble could not answer."},{status:500});
+    console.error("Bubble chat route failed:", error);
+    return NextResponse.json(fallback(text || "Your message", "connection"));
   }
 }

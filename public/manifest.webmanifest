@@ -1,1 +1,16 @@
-{"name":"Bubble","short_name":"Bubble","start_url":"/","display":"standalone","background_color":"#fff8fc","theme_color":"#eee8ff","icons":[{"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "id": "/",
+  "name": "Bubble",
+  "short_name": "Bubble",
+  "description": "Live your life. Bubble organizes it.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fff8fc",
+  "theme_color": "#eee8ff",
+  "icons": [
+    {"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

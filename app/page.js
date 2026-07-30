@@ -151,6 +151,16 @@ function fmt(v, digits=0) {
 }
 function n(v){ return Number.isFinite(Number(v)) ? Number(v) : 0; }
 
+async function readApiJson(response) {
+  const raw = await response.text();
+  if (!raw) throw new Error(`Bubble received an empty server response (${response.status}).`);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error(`Bubble received an invalid server response (${response.status}).`);
+  }
+}
+
 function filteredEntries(entries, key) {
   return entries.filter(e => (e.categories || []).includes(key));
 }
@@ -348,7 +358,7 @@ export default function Home() {
     setLoading(true); setNotice("");
     try {
       const res = await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"log",text:content,profile:PROFILE,preferredCategory})});
-      const parsed = await res.json();
+      const parsed = await readApiJson(res);
       if (!res.ok) throw new Error(parsed.error || "Bubble had trouble reading that.");
       const categories = [...new Set([...(parsed.categories || ["life"]), ...(preferredCategory ? [preferredCategory] : [])])];
       const record = {
@@ -397,7 +407,7 @@ export default function Home() {
         text:content,entryDate:chatDateKey,profile:PROFILE,memories:memoryContext,
         todayMessages:[...chatMessages,{role:"user",content}].map(message=>({role:message.role,content:message.content}))
       })});
-      const parsed = await response.json();
+      const parsed = await readApiJson(response);
       if(!response.ok) throw new Error(parsed.error || "Bubble could not answer.");
 
       const {data:assistantMessage,error:assistantError} = await supabase.from("bubble_chat_messages").insert({
@@ -406,6 +416,7 @@ export default function Home() {
       }).select("*").single();
       if(assistantError) throw assistantError;
       setChatMessages(prev=>[...prev,assistantMessage]);
+      if(parsed.degraded) setNotice("Your message was saved, but Bubble’s AI connection had a temporary problem. You can keep using the app and try again normally.");
 
       if(parsed.should_log){
         const record={id:crypto.randomUUID(),created_at:new Date().toISOString(),raw_text:content,summary:parsed.summary || content,encouragement:parsed.encouragement || "",categories:parsed.categories || ["life"],data:parsed.data || {}};
@@ -485,7 +496,7 @@ export default function Home() {
     setLoading(true); setHistoryAnswer("");
     try {
       const res=await fetch("/api/parse",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"query",text:historyQuery,history:entries.slice(0,250),profile:PROFILE})});
-      const data=await res.json();
+      const data=await readApiJson(res);
       setHistoryAnswer(data.answer || data.error);
     } finally { setLoading(false); }
   }
