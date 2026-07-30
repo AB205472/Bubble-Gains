@@ -12,8 +12,6 @@
   "theme_color": "#ffb8d5",
   "categories": ["health", "lifestyle", "productivity"],
   "icons": [
-    {"src":"/bubble-ab-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"},
-    {"src":"/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {"src":"/app-icon.png","sizes":"256x256","type":"image/png","purpose":"any maskable"}
   ]
 }
