@@ -18,12 +18,9 @@ export const metadata = {
   applicationName: "Bubble Gains",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [
-      { url: "/bubble-ab-icon.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
-    ],
-    apple: [{ url: "/bubble-ab-icon.svg", type: "image/svg+xml" }]
+    icon: [{ url: "/app-icon.png", sizes: "256x256", type: "image/png" }],
+    shortcut: [{ url: "/app-icon.png", sizes: "256x256", type: "image/png" }],
+    apple: [{ url: "/app-icon.png", sizes: "256x256", type: "image/png" }]
   },
   appleWebApp: { capable: true, title: "Bubble Gains", statusBarStyle: "default" },
   formatDetection: { telephone: false }
