@@ -7,7 +7,7 @@ import BubbleVision from "./bubble-vision";
 import NotificationSettings from "./notification-settings";
 
 export const viewport = {
-  themeColor: "#536b4a",
+  themeColor: "#f7f3eb",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"
@@ -15,7 +15,7 @@ export const viewport = {
 
 export const metadata = {
   title: { default: "Bubble Gains", template: "%s · Bubble Gains" },
-  description: "A soft woodland home for your real-life progress.",
+  description: "A romantic botanical journal for tending to your real-life progress.",
   applicationName: "Bubble Gains",
   manifest: "/manifest.webmanifest",
   icons: {
