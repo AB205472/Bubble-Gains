@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root{
+  --becoming-cream:#fffaf3;
+  --becoming-paper:#fffdf8;
+  --becoming-sky:#dfeaf0;
+  --becoming-leaf:#8fa58f;
+  --becoming-deep:#34483d;
+  --becoming-petal:#e9c8cf;
+  --becoming-lilac:#ddd8ea;
+  --becoming-sun:#e8c77c;
+  --becoming-ink:#343936;
+  --becoming-muted:#747a75;
+  --becoming-line:#ded8cd;
+}
+
+html{background:var(--becoming-cream)!important}
+body{
+  color:var(--becoming-ink)!important;
+  font-family:'Manrope',sans-serif!important;
+  background:
+    radial-gradient(ellipse at 8% 4%,rgba(223,234,240,.9),transparent 31%),
+    radial-gradient(ellipse at 92% 8%,rgba(233,200,207,.48),transparent 28%),
+    radial-gradient(ellipse at 48% 100%,rgba(221,216,234,.46),transparent 35%),
+    linear-gradient(180deg,#fffaf3 0%,#fbf7ef 55%,#f4f7f2 100%)!important;
+}
+
+.brand h1,.auth-brand h1,.hero h2,.page-title h2,.chat-day-header h2,.storybook-heading h2,.column-title h2,.notification-head strong,.overview-copy h2,.level-panel h2{
+  font-family:'Cormorant Garamond',serif!important;
+  color:var(--becoming-deep)!important;
+  font-style:normal!important;
+  letter-spacing:-.025em!important;
+}
+
+.brand h1{font-size:clamp(3rem,9vw,5rem)!important;line-height:.86!important}
+.brand h1 span{display:none!important}
+.brand .tiny,.auth-brand .tiny,.soft{color:#9b747d!important;letter-spacing:.15em!important}
+.brand p{color:var(--becoming-muted)!important}
+
+.card,.bubble-card,.bubble-overview,.notification-sheet{
+  background:rgba(255,253,248,.92)!important;
+  border-color:rgba(162,154,142,.28)!important;
+  box-shadow:0 18px 48px rgba(62,70,62,.08)!important;
+}
+
+.nav{background:rgba(255,250,243,.95)!important;border-color:rgba(151,160,147,.34)!important}
+.nav .active{background:linear-gradient(135deg,rgba(223,234,240,.82),rgba(233,200,207,.52))!important;color:var(--becoming-deep)!important}
+.primary,.notification-primary,.chat-composer button{
+  background:linear-gradient(135deg,#607c69,#8b7180)!important;
+  color:white!important;
+  box-shadow:0 9px 22px rgba(71,91,78,.18)!important;
+}
+
+.level-chip>span,.pulse,.live-pill{background:var(--becoming-leaf)!important;color:white!important}
+.bar{background:#ece9e1!important}.bar i{background:linear-gradient(90deg,#8fa58f,#c897a5)!important}
+.notice,.complete{background:#eef4ed!important}
+.bubble-welcome,.protein-ribbon{background:linear-gradient(135deg,#edf4f2,#f8ebee)!important;border-color:#cbd8d0!important}
+
+.bubble-card{border-radius:22px!important}
+.bubble-card:hover{transform:translateY(-3px)!important}
+.bubble-card i,.back-button{color:#6f8876!important}
+.bubble-overview:after,.card:after{opacity:.35!important}
+
+footer{color:#8b8f89!important}
+
+@media(max-width:520px){
+  .brand h1{font-size:3.25rem!important}
+}
