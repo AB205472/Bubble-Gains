@@ -7,7 +7,7 @@ s=s.replaceAll('setTab("chat")','setTab("today")');
 s=s.replaceAll('setTab("home")','setTab("stats")');
 must(/\{\["chat","home","bubbles","memories","history"\]\.map\(x=><button key=\{x\} className=\{\(tab===x \|\| \(x==="bubbles"&&tab==="bubble-detail"\)\)\?"active":""\} onClick=\{\(\)=>setTab\(x\)\}>\{x\[0\]\.toUpperCase\(\)\+x\.slice\(1\)\}<\/button>\)\}/,'{[{key:"today",label:"Today",icon:"bubble"},{key:"stats",label:"Overall",icon:"strength"},{key:"bubbles",label:"Bubbles",icon:"flower"},{key:"memories",label:"Memories",icon:"memories"},{key:"history",label:"History",icon:"history"}].map(item=><button key={item.key} className={(tab===item.key || (item.key==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(item.key)}><BubbleIcon name={item.icon} size={20}/><span>{item.label}</span></button>)}','navigation');
 must('{tab==="chat" && <DailyBubbleChat','{tab==="today" && <><DailyBubbleChat','today chat');
-must(/openHome=\{\(\)=>setTab\("stats"\)\}\s*\/>/,'openHome={()=>document.getElementById("today-stats")?.scrollIntoView({behavior:"smooth"})}\n      /><TodaySnapshot today={today} profile={PROFILE}/></>}','today snapshot mount');
+must(/openHome=\{\(\)=>setTab\("stats"\)\}\s*\/>/,'openHome={()=>document.getElementById("today-stats")?.scrollIntoView({behavior:"smooth"})}\n      /><TodaySnapshot today={today} profile={PROFILE}/></>','today snapshot mount');
 must('{tab==="home" && <>','{tab==="stats" && <>','overall stats tab');
 must('<section className="home-columns">','<section className="home-columns overall-stats-only">','overall stats columns');
 s=s.replaceAll('<span>🫧</span>','<span><BubbleIcon name="bubble" size={22}/></span>');
