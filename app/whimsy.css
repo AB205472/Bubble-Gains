@@ -1,0 +1,38 @@
+/* Bubble's whimsical storybook layer */
+:root{--bubble-pink:#ff8fbd;--bubble-rose:#ffb8d5;--bubble-lilac:#b79be8;--bubble-sky:#bfe9ff;--bubble-sun:#ffd875;--bubble-grass:#cdeebc}
+html{background:
+ radial-gradient(circle at 12% 8%,rgba(255,255,255,.95) 0 3px,transparent 4px),
+ radial-gradient(circle at 84% 12%,rgba(255,216,117,.55) 0 4px,transparent 5px),
+ radial-gradient(circle at 7% 44%,rgba(183,155,232,.28) 0 5px,transparent 6px),
+ linear-gradient(155deg,#fff9fc 0%,#fff1f7 42%,#f5efff 72%,#effaff 100%);
+ background-size:auto,120px 120px,160px 160px,auto}
+body:before,body:after{content:"";position:fixed;pointer-events:none;z-index:-1;filter:blur(.2px)}
+body:before{left:-42px;top:16%;width:170px;height:90px;border-radius:80px;background:rgba(255,255,255,.72);box-shadow:58px -24px 0 -12px rgba(255,255,255,.72),118px 8px 0 -22px rgba(255,255,255,.72)}
+body:after{right:-45px;bottom:8%;width:180px;height:92px;border-radius:90px;background:rgba(255,255,255,.62);box-shadow:-62px -20px 0 -15px rgba(255,255,255,.62),-116px 10px 0 -27px rgba(255,255,255,.62)}
+.brand h1,.page-title h2,.hero h2{font-family:"Cherry Bomb One","Nunito",sans-serif;letter-spacing:.01em;color:#6d4e82;text-shadow:0 3px 0 #fff}
+.brand:after{content:"live life. bubble figures the rest out. ♡";display:inline-block;margin-top:8px;padding:7px 13px;border-radius:999px;background:#eee3ff;color:#7a5d9a;font-size:.72rem;font-weight:900;letter-spacing:.04em}
+.card,.bubble-card,.notification-sheet{border:2px solid rgba(255,255,255,.92);box-shadow:0 12px 0 rgba(183,155,232,.08),0 20px 45px rgba(106,73,131,.12)}
+.card{position:relative;overflow:hidden}
+.card:before{content:"✦";position:absolute;right:15px;top:10px;color:#ffc969;opacity:.68;font-size:1.05rem;pointer-events:none}
+.nav{border:2px solid rgba(255,255,255,.92);background:rgba(255,252,254,.84);box-shadow:0 8px 0 rgba(255,143,189,.07)}
+.nav .active{background:linear-gradient(135deg,#ffdcea,#ece4ff);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)}
+.primary,.notification-primary{background:linear-gradient(135deg,var(--bubble-pink),var(--bubble-lilac));box-shadow:0 7px 0 rgba(116,80,145,.14);transition:transform .15s ease,box-shadow .15s ease}
+.primary:active,.notification-primary:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(116,80,145,.12)}
+.notification-fab{display:grid;place-items:center;background:linear-gradient(145deg,#fff,#ffd7e8);border:3px solid #fff;box-shadow:0 8px 0 rgba(255,143,189,.16),0 15px 34px rgba(93,62,116,.18);animation:bubbleBob 3s ease-in-out infinite}
+.notification-fab:after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#fff;opacity:.8;transform:translate(-10px,-11px)}
+@keyframes bubbleBob{50%{transform:translateY(-5px) rotate(4deg)}}
+.notification-backdrop{background:rgba(78,54,91,.3);backdrop-filter:blur(8px)}
+.notification-sheet{background:linear-gradient(180deg,#fffafd,#fff 45%,#faf5ff);border-radius:34px 34px 24px 24px}
+.notification-head strong{font-family:"Cherry Bomb One","Nunito",sans-serif;color:#73518a;font-size:1.55rem;font-weight:400}
+.notification-head:before{content:"☁️";font-size:2.2rem;margin-right:4px}
+.notification-note{background:linear-gradient(135deg,#fff1f7,#eee7ff);border:1px dashed #d9b9eb}
+.notification-sheet label{margin:8px 0;padding:13px 14px!important;border:1px solid #f1dce9!important;border-radius:17px;background:rgba(255,255,255,.8)}
+.notification-sheet label:nth-of-type(1):before{content:"☀️"}.notification-sheet label:nth-of-type(2):before{content:"🍴"}.notification-sheet label:nth-of-type(3):before{content:"👜"}.notification-sheet label:nth-of-type(4):before{content:"🌙"}
+.notification-sheet label:before{margin-right:7px}.notification-sheet label input{margin-left:auto}
+.notification-toggle{background:#f0e9ff!important}
+.install-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.install-step{padding:12px;border-radius:18px;background:#fff;border:1px dashed #e5bcd2;text-align:center;font-size:.78rem;font-weight:800;color:#735d80}
+.install-step b{display:grid;place-items:center;width:27px;height:27px;margin:0 auto 6px;border-radius:50%;background:#ff9cc4;color:#fff}
+.app-icon-preview{width:82px;height:82px;display:block;margin:4px auto 12px;border-radius:22px;filter:drop-shadow(0 9px 12px rgba(108,77,127,.2))}
+.bubble-kicker{text-align:center;color:#8b70a3;font-weight:850;font-size:.82rem;margin:-3px 0 14px}
+@media(max-width:560px){.install-steps{grid-template-columns:1fr}.notification-sheet{padding:18px 15px}.brand:after{font-size:.65rem}.notification-fab{right:12px}}
