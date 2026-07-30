@@ -8,12 +8,12 @@ s=s.replaceAll('setTab("chat")','setTab("today")');
 s=s.replaceAll('setTab("home")','setTab("stats")');
 
 must('squats: health.squats ?? null,','squats: health.squats ?? health.weighted_squats ?? null,','weighted squats mapping');
-must('nutrition_confidence: row.nutrition?.confidence ?? null,','nutrition_confidence: row.nutrition?.confidence ?? null,\n      confirmed_minimum_calories: row.nutrition?.confirmed_minimum_calories ?? null,\n      confirmed_minimum_protein_g: row.nutrition?.confirmed_minimum_protein_g ?? null,','verified minimum mapping');
+must('nutrition_confidence: row.nutrition?.confidence ?? null,','nutrition_confidence: row.nutrition?.confidence ?? null,\n      confirmed_minimum_calories: row.nutrition?.confirmed_minimum_calories ?? null,\n      confirmed_minimum_protein_g: row.nutrition?.confirmed_minimum_protein_g ?? null,\n      squat_weight_lb: health.squat_weight_lb ?? null,','verified minimum mapping');
 
 must(/\{\["chat","home","bubbles","memories","history"\]\.map\(x=><button key=\{x\} className=\{\(tab===x \|\| \(x==="bubbles"&&tab==="bubble-detail"\)\)\?"active":""\} onClick=\{\(\)=>setTab\(x\)\}>\{x\[0\]\.toUpperCase\(\)\+x\.slice\(1\)\}<\/button>\)\}/,'{[{key:"today",label:"Today",icon:"bubble"},{key:"stats",label:"Overall",icon:"strength"},{key:"bubbles",label:"Insights",icon:"flower"},{key:"memories",label:"Memories",icon:"memories"},{key:"history",label:"History",icon:"history"}].map(item=><button key={item.key} className={(tab===item.key || (item.key==="bubbles"&&tab==="bubble-detail"))?"active":""} onClick={()=>setTab(item.key)}><BubbleIcon name={item.icon} size={21}/><span>{item.label}</span></button>)}','navigation');
 
 must('{tab==="chat" && <DailyBubbleChat','{tab==="today" && <><DailyBubbleChat','today chat');
-must(/openHome=\{\(\)=>setTab\("stats"\)\}\s*\/>/,'openHome={()=>document.getElementById("today-stats")?.scrollIntoView({behavior:"smooth"})}\n      /><TodaySnapshot today={today} entries={entries} profile={PROFILE}/></>}','today snapshot mount');
+must(/openHome=\{\(\)=>setTab\("stats"\)\}\s*\/>/,'openHome={()=>document.getElementById("today-stats")?.scrollIntoView({behavior:"smooth"})}\n      /><TodaySnapshot today={today} entries={entries} profile={PROFILE}/></>','today snapshot mount');
 must('{tab==="home" && <>','{tab==="stats" && <>','overall stats tab');
 must('<section className="home-columns">','<section className="home-columns overall-stats-only">','overall stats columns');
 
