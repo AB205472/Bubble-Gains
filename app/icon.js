@@ -5,15 +5,15 @@ export const contentType = "image/png";
 
 export default function Icon(){
   return new ImageResponse(
-    <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",borderRadius:112,background:"linear-gradient(145deg,#ffd9e9 0%,#ff9fc8 48%,#cbb9ff 100%)",fontFamily:"cursive"}}>
-      <div style={{position:"absolute",inset:18,borderRadius:96,border:"8px solid rgba(255,255,255,.72)",boxShadow:"inset 0 0 0 4px rgba(255,255,255,.28)"}} />
-      <div style={{position:"absolute",width:374,height:374,borderRadius:"50%",background:"radial-gradient(circle at 34% 24%,rgba(255,255,255,.95) 0 8%,rgba(255,255,255,.35) 9% 18%,transparent 19%),radial-gradient(circle at 50% 44%,#ffbfd9 0%,#f58cba 68%,#e76fac 100%)",border:"8px solid rgba(255,255,255,.72)",boxShadow:"0 22px 38px rgba(138,68,112,.28),inset 0 0 34px rgba(255,255,255,.6)"}} />
-      <div style={{position:"absolute",top:52,left:70,fontSize:48,color:"white"}}>✦</div>
-      <div style={{position:"absolute",right:56,top:78,fontSize:42,color:"#fff4a8"}}>★</div>
-      <div style={{position:"absolute",left:48,bottom:78,fontSize:46,color:"#ffffff"}}>♡</div>
-      <div style={{position:"absolute",right:58,bottom:64,fontSize:52,color:"#fff"}}>☁</div>
-      <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-6,color:"white",fontSize:178,fontWeight:700,letterSpacing:-26,textShadow:"0 7px 0 rgba(198,82,137,.35),0 0 14px rgba(255,255,255,.75)"}}>AB</div>
-      <div style={{position:"absolute",right:110,bottom:120,color:"white",fontSize:70,textShadow:"0 5px 0 rgba(198,82,137,.3)"}}>♡</div>
+    <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",background:"#fff4f7",fontFamily:"cursive"}}>
+      <div style={{position:"absolute",width:430,height:430,borderRadius:"50%",background:"radial-gradient(circle at 30% 20%,#ffffff 0 7%,rgba(255,255,255,.72) 8% 15%,transparent 16%),radial-gradient(circle at 48% 44%,#ffc5dc 0%,#f891bd 58%,#ef6faa 100%)",border:"7px solid #f45f9f",boxShadow:"0 18px 30px rgba(187,75,127,.25),inset 0 0 34px rgba(255,255,255,.8)"}} />
+      <div style={{position:"absolute",left:78,top:66,width:170,height:58,borderRadius:"50%",background:"rgba(255,255,255,.72)",transform:"rotate(-24deg)",filter:"blur(1px)"}} />
+      <div style={{position:"absolute",right:82,bottom:92,width:115,height:34,borderRadius:"50%",background:"rgba(255,255,255,.65)",transform:"rotate(-20deg)"}} />
+      <div style={{position:"absolute",left:92,top:102,color:"white",fontSize:38}}>✦</div>
+      <div style={{position:"absolute",right:98,top:130,color:"white",fontSize:28}}>✧</div>
+      <div style={{position:"absolute",left:105,bottom:120,color:"white",fontSize:24}}>✧</div>
+      <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center",marginTop:-6,color:"#fff8fb",fontSize:185,fontWeight:500,letterSpacing:-24,textShadow:"0 5px 0 #dc4f8f,0 0 9px white"}}>AB</div>
+      <div style={{position:"absolute",right:104,bottom:115,color:"#fff",fontSize:65,textShadow:"0 4px 0 #dc4f8f"}}>♡</div>
     </div>,
     size
   );
