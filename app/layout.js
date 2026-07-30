@@ -1,29 +1,31 @@
 import "./globals.css";
 import "./notifications.css";
+import "./whimsy.css";
 import PwaRegister from "./pwa-register";
 import BubbleVision from "./bubble-vision";
 import NotificationSettings from "./notification-settings";
 
 export const viewport = {
-  themeColor: "#eee8ff",
+  themeColor: "#ffb8d5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"
 };
 
 export const metadata = {
-  title: { default: "Bubble", template: "%s · Bubble" },
-  description: "Live your life. Bubble organizes it.",
-  applicationName: "Bubble",
+  title: { default: "Bubble Gains", template: "%s · Bubble Gains" },
+  description: "Live life. Bubble figures the rest out.",
+  applicationName: "Bubble Gains",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
+      { url: "/bubble-ab-icon.svg", type: "image/svg+xml" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
   },
-  appleWebApp: { capable: true, title: "Bubble", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Bubble Gains", statusBarStyle: "default" },
   formatDetection: { telephone: false }
 };
 
