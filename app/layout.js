@@ -1,5 +1,6 @@
 import "./globals.css";
 import PwaRegister from "./pwa-register";
+import BubbleVision from "./bubble-vision";
 
 export const viewport = {
   themeColor: "#eee8ff",
@@ -25,5 +26,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="en"><body><PwaRegister />{children}</body></html>;
+  return <html lang="en"><body><PwaRegister /><BubbleVision />{children}</body></html>;
 }
