@@ -6,6 +6,10 @@ import { getSupabaseBrowserClient } from "../lib/supabase";
 const STORAGE_KEY = "bubble_notification_settings_v2";
 const DEFAULTS = { enabled:false, breakfast:"08:00", lunch:"11:30", snack:"14:45", recap:"19:30" };
 
+function BellDrawing({size=24}){
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10a5 5 0 0 1 10 0v4l2 3H5l2-3v-4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 19a2.2 2.2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M9 6c.8-1 1.8-1.5 3-1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+}
+
 function isStandalone(){
   return typeof window!=="undefined" && (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true);
 }
@@ -46,10 +50,10 @@ export default function NotificationSettings(){
       const hhmm=`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
       const dateKey=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Chicago",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
       const reminders=[
-        ["breakfast","Morning protein reminder 💪🏻","Let’s get some protein in and start your day strong."],
-        ["lunch","Lunch reminder 🍴","Time for lunch. Your protein-first workday keeps dinner flexible."],
-        ["snack","Before you leave work 👜","Grab your high-protein snack before you head out."],
-        ["recap","Bubble daily recap ✨","Open Bubble and finish today’s wins, food, water, and movement recap."]
+        ["breakfast","Morning protein reminder","Let’s get some protein in and start your day strong."],
+        ["lunch","Lunch reminder","Time for lunch. Your protein-first workday keeps dinner flexible."],
+        ["snack","Before you leave work","Grab your high-protein snack before you head out."],
+        ["recap","Bubble daily recap","Open Bubble and finish today’s wins, food, water, and movement recap."]
       ];
       for(const [key,title,body] of reminders){
         if(settings[key]!==hhmm)continue;
@@ -77,20 +81,20 @@ export default function NotificationSettings(){
     if(result==="granted"){
       await save({...settings,enabled:true});
       const reg=await navigator.serviceWorker?.ready;
-      await reg?.showNotification("Bubble notifications are on 🫧",{body:"Your cute little reminders are ready.",icon:"/icon",badge:"/icon",tag:"bubble-welcome",data:{url:"/"}});
-      setMessage("Notifications are on. You should see the test alert now. ♡");
+      await reg?.showNotification("Bubble notifications are on",{body:"Your reminders are ready.",icon:"/icon",badge:"/icon",tag:"bubble-welcome",data:{url:"/"}});
+      setMessage("Notifications are on. You should see the test alert now.");
     }else setMessage("Notification permission was not granted. You can enable it in iPhone Settings for Bubble.");
   };
 
   return <>
-    <button className="notification-fab" onClick={()=>setOpen(true)} aria-label="Open Bubble notification settings">🔔</button>
+    <button className="notification-fab" onClick={()=>setOpen(true)} aria-label="Open Bubble notification settings"><BellDrawing size={23}/></button>
     {open&&<div className="notification-backdrop" onClick={()=>setOpen(false)}>
       <section className="notification-sheet" onClick={e=>e.stopPropagation()} aria-label="Bubble notification settings">
         <div className="notification-head"><div><strong>Bubble reminders</strong><p>Your little workday nudges, exactly when you need them.</p></div><button onClick={()=>setOpen(false)} aria-label="Close">×</button></div>
         <img className="app-icon-preview" src="/icon" alt="Pink AB Bubble app icon"/>
-        <p className="bubble-kicker">live life. bubble figures the rest out. ♡</p>
-        {!installed&&<><div className="notification-note"><strong>Add Bubble to your iPhone Home Screen</strong><br/>Open this page in Safari, tap Share, choose <b>Add to Home Screen</b>, then launch Bubble from the new pink AB icon.</div><div className="install-steps"><div className="install-step"><b>1</b>Open in Safari</div><div className="install-step"><b>2</b>Share → Add to Home Screen</div><div className="install-step"><b>3</b>Open the AB icon</div></div></>}
-        <button className="notification-primary" onClick={enable}>{permission==="granted"?"Send me a test notification ✨":"Turn on notifications ♡"}</button>
+        <p className="bubble-kicker">live life. bubble figures the rest out.</p>
+        {!installed&&<><div className="notification-note"><strong>Add Bubble to your iPhone Home Screen</strong><br/>Open this page in Safari, tap Share, choose <b>Add to Home Screen</b>, then launch Bubble from the pink AB icon.</div><div className="install-steps"><div className="install-step"><b>1</b>Open in Safari</div><div className="install-step"><b>2</b>Share → Add to Home Screen</div><div className="install-step"><b>3</b>Open the AB icon</div></div></>}
+        <button className="notification-primary" onClick={enable}>{permission==="granted"?"Send a test notification":"Turn on notifications"}</button>
         <label>Morning protein<input type="time" value={settings.breakfast} onChange={e=>save({...settings,breakfast:e.target.value})}/></label>
         <label>Lunch<input type="time" value={settings.lunch} onChange={e=>save({...settings,lunch:e.target.value})}/></label>
         <label>Before leaving work<input type="time" value={settings.snack} onChange={e=>save({...settings,snack:e.target.value})}/></label>
