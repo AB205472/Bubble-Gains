@@ -1,5 +1,5 @@
-const CACHE = "bubble-v8-shell";
-const SHELL = ["/", "/manifest.webmanifest", "/app-icon.png"];
+const CACHE = "bubble-v9-shell";
+const SHELL = ["/", "/manifest.webmanifest", "/icon"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -24,8 +24,8 @@ self.addEventListener("push", event => {
   const title = payload.title || "Bubble reminder 🫧";
   const options = {
     body: payload.body || "Open Bubble for your check-in.",
-    icon: "/app-icon.png",
-    badge: "/app-icon.png",
+    icon: "/icon",
+    badge: "/icon",
     tag: payload.tag || "bubble-reminder",
     data: { url: payload.url || "/" },
     renotify: Boolean(payload.renotify)
