@@ -1,15 +1,15 @@
 {
   "id": "/",
-  "name": "Bubble Gains",
-  "short_name": "Bubble",
-  "description": "Live life. Bubble figures the rest out.",
+  "name": "Becoming",
+  "short_name": "Becoming",
+  "description": "A private digital garden for self-discovery, discipline, self-love, and becoming your best self.",
   "start_url": "/?source=homescreen",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
-  "background_color": "#fff7fb",
-  "theme_color": "#ffb8d5",
+  "background_color": "#fffaf3",
+  "theme_color": "#fffaf3",
   "categories": ["health", "lifestyle", "productivity"],
   "icons": [
     {"src":"/icon","sizes":"512x512","type":"image/png","purpose":"any maskable"}
