@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./notifications.css";
 import "./whimsy.css";
+import "./approved-design.css";
 import PwaRegister from "./pwa-register";
 import BubbleVision from "./bubble-vision";
 import NotificationSettings from "./notification-settings";
